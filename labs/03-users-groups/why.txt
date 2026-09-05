@@ -1,0 +1,6 @@
+RIPASSO RAPIDO
+  Utenti in /etc/passwd, gruppi in /etc/group.
+  useradd -m -s /bin/bash  crea utente con home e shell.
+  usermod -aG <gruppo> <utente>  aggiunge un gruppo SECONDARIO:
+  la -a (append) NON rimuove i gruppi esistenti (senza -a li azzererebbe).
+  chown utente:gruppo  cambia owner e group insieme;  770 = rwx per chi e' nel team.

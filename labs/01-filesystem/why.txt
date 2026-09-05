@@ -1,0 +1,6 @@
+RIPASSO RAPIDO
+  mkdir -p crea directory annidate in un colpo (il -p genera i genitori).
+  >  scrive (o sovrascrive) in un file;  >>  accoda.
+  printf '...' scrive il testo preciso byte per byte.
+  echo '...'  aggiunge una nuova riga finale: per il checker va bene lo stesso.
+  mv  sposta o rinomina   |   cp  copia   |   rm  elimina (niente undo).

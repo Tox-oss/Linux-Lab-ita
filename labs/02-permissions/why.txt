@@ -1,0 +1,6 @@
+RIPASSO RAPIDO
+  Ogni file ha un owner, un group e "altri": rwx = 4 2 1.
+  chmod 600 = solo owner legge/scrive;  775 = rwx owner/group, rx altri.
+  chmod a+x aggiunge il bit eseguibile per tutti.
+  u=rwx,g=rwx,o=rx e' la forma simbolica equivalente a 775.
+  Una directory deve avere x per chi deve poterne elencare i file.

@@ -1,0 +1,6 @@
+RIPASSO RAPIDO
+  La pipe | collega l'output di un comando all'input del successivo.
+  grep  filtra le righe;  wc -l  conta le righe;  sort -u  ordina e deduplica.
+  awk  lavora su colonne:  -F,  imposta il separatore;  NR > 1  salta l'header;
+  END  esegue a fine input.  >  scrive il risultato in un file.
+  Per summary.txt va bene printf (preciso) oppure echo (newline finale ok).

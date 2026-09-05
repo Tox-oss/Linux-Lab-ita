@@ -1,0 +1,6 @@
+RIPASSO RAPIDO
+  ip mostra lo stato delle interfacce; lo e' sempre disponibile come loopback locale.
+  ss sostituisce netstat nei sistemi moderni per socket e porte.
+  ping prova la raggiungibilita di base, qui senza dipendere da Internet.
+  curl usa URL uniformi: file:// permette test riproducibili anche offline.
+  ssh/scp/rsync coprono accesso remoto, copia puntuale e sincronizzazione incrementale.

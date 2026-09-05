@@ -1,0 +1,38 @@
+[CONCETTO] Navigazione, Percorsi e Ispezione
+* 'cd' cambia directory: sposta la shell nel punto del filesystem dove vuoi lavorare.
+* 'pwd' stampa il percorso assoluto della directory corrente.
+* 'ls -1' mostra una voce per riga, comodo quando devi salvare una lista pulita.
+* 'find' attraversa directory e sottodirectory cercando risorse per nome, tipo o altre proprieta.
+* 'tail -n N' legge le ultime N righe di un file, tipico per i log.
+* 'less' apre file lunghi senza stamparli tutti a schermo: /cerca, n prossimo risultato, q esci.
+---
+[STRATEGIA & BEST PRACTICES]
+* Prima di creare output, verifica la posizione con 'pwd'. Se sei in /workspace invece che nel WORKDIR, i file finiranno nel posto sbagliato.
+* Per il listing di primo livello, resta nel WORKDIR e usa un comando che non scenda nelle sottodirectory.
+* Per 'find', parti dalla directory piu stretta possibile: evidence, non tutto /workspace.
+* Per il runbook, usa 'less docs/runbook.txt' e cerca 'Escalation owner'.
+---
+[COMANDI GUIDATI & ALTERNATIVE]
+1. Posizione corrente:
+   pwd > current_path.txt
+
+2. Listing di primo livello:
+   ls -1 > root_listing.txt
+
+3. Ricerca file incident:
+   find evidence -type f -name 'incident-*.txt' | sort > incident_files.txt
+
+4. Ultime righe del log:
+   tail -n 4 logs/app.log > last_events.txt
+
+5. Lettura con less e scrittura owner:
+   less docs/runbook.txt
+   printf 'sre-oncall\n' > owner.txt
+---
+[VERIFICA MANUALE AUTONOMA]
+Prima di lanciare 'lab check 06-navigation-search':
+* cat current_path.txt deve finire con /nav-lab.
+* cat root_listing.txt deve mostrare docs, evidence, logs e root_listing.txt puo comparire se lo hai gia creato.
+* cat incident_files.txt deve contenere 3 percorsi sotto evidence.
+* cat last_events.txt deve iniziare con la riga delle 10:03 e finire con quella delle 10:06.
+* cat owner.txt deve stampare sre-oncall.

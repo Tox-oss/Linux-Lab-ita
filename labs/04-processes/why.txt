@@ -1,0 +1,8 @@
+RIPASSO RAPIDO
+  Il simbolo & avvia un comando in background e la shell resta libera.
+  $! contiene il PID dell'ultimo processo lanciato in background.
+  ps -p <PID>  mostra solo quel processo.
+  Attenzione: 'cd ... && sleep &' mette in background l'INTERA lista:
+  separa con ';' oppure lancia sleep da solo, altrimenti $! e' la subshell.
+  Il worker e' volatile: vive ~1 ora e muore col container
+  (lab start 04-processes lo ricrea).

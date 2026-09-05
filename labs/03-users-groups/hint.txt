@@ -1,0 +1,45 @@
+[CONCETTO] Gestione Utenti, Gruppi e Ownership POSIX
+• Linux è un sistema operativo multi-utente:
+  - Gli utenti sono definiti in /etc/passwd con un UID, una home directory e una shell predefinita.
+  - I gruppi sono definiti in /etc/group e permettono di condividere file e autorizzazioni tra più utenti.
+• 'groupadd' registra un nuovo gruppo nel sistema.
+• 'useradd' crea un account:
+  - '-m' (create-home): crea fisicamente la directory /home/<utente>.
+  - '-s /bin/bash': imposta la shell di login interattiva.
+• 'usermod -aG <gruppo> <utente>': aggiunge ('-a' per append) un gruppo secondario ('-G') all'utente senza revocare i gruppi a cui già appartiene.
+• 'chown utente:gruppo': imposta contemporaneamente proprietario e gruppo assegnato alla cartella.
+• 770 = rwxrwx--- (accesso completo a learner e a chi fa parte del gruppo devops; nessun accesso per gli altri).
+• Questi comandi modificano utenti e gruppi nel container e richiedono privilegi amministrativi. Non modificano l'host Docker.
+---
+[STRATEGIA & BEST PRACTICES]
+• Posizione di lavoro: verifica di trovarti in '${LAB_TRAINING_ROOT:-/workspace/training}/users-lab' (usa 'pwd').
+• Ordine logico delle operazioni:
+  1. Crea il gruppo 'devops' con 'groupadd'.
+  2. Crea l'utente 'learner' specificando i flag per home e shell bash.
+  3. Aggiungi learner a devops con 'usermod -aG'.
+  4. Crea la cartella 'team' in users-lab.
+  5. Cambia proprietario e gruppo della cartella con 'chown'.
+  6. Restringi i permessi a 770 con 'chmod'.
+• Prima di ogni passaggio puoi verificare il risultato con 'getent group devops', 'id learner' e 'stat'.
+---
+[COMANDI GUIDATI & ALTERNATIVE]
+1. Creazione gruppo e utente:
+   groupadd devops
+   useradd -m -s /bin/bash learner
+
+2. Aggiunta al gruppo secondario devops:
+   usermod -aG devops learner
+
+3. Struttura cartella di team, ownership e permessi:
+   mkdir -p team
+   chown learner:devops team
+   chmod 770 team
+Attenzione: usa sempre '-aG' con usermod. '-G' senza '-a' sostituisce i gruppi secondari esistenti.
+---
+[VERIFICA MANUALE AUTONOMA]
+Prima di lanciare 'lab check 03-users-groups', verifica lo stato di sistema:
+• Ispeziona l'identità dell'utente e i suoi gruppi:
+  id learner
+  getent passwd learner
+• Ispeziona proprietà e permessi della directory team:
+  stat -c '%n -> Owner: %U:%G | Mode: %a (%A)' team

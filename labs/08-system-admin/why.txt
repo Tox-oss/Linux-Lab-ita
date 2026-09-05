@@ -1,0 +1,7 @@
+RIPASSO RAPIDO
+  top in batch produce uno snapshot adatto a file e automazioni.
+  free mostra pressione memoria senza dover leggere /proc/meminfo a mano.
+  openrc e' l'init di sistema: --version ne mostra la versione senza gestire servizi reali.
+  syslogd/logger gestiscono il log di sistema: i messaggi finiscono in /var/log/messages.
+  sudo separa identita effettiva e comando eseguito.
+  crontab registra comandi pianificati: installare e poi leggere con -l evita dubbi.

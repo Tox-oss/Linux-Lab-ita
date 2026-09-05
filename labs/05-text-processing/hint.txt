@@ -1,0 +1,44 @@
+[CONCETTO] Flussi di Testo Unix, Pipeline, Filtri e Colonne
+• La filosofia Unix si basa su strumenti specializzati che elaborano flussi di testo collegati tra loro tramite pipe '|'.
+• 'grep': cerca e filtra le righe corrispondenti a una stringa o espressione regolare.
+• 'wc -l' (word count lines): conta il numero di righe ricevute nello stream.
+• 'sort': ordina le righe alfabeticamente o numericamente; con '-u' (unique) elimina i duplicati ordinando in un solo colpo.
+• 'awk': processore di testo strutturato a colonne.
+  - Per impostazione predefinita divide per spazi bianchi ($1, $2, $3...).
+  - Con '-F,' imposta la virgola come separatore di campo (ideale per file CSV).
+  - 'NR > 1' ignora la prima riga (header).
+  - Il blocco 'END { ... }' viene eseguito una sola volta al termine della lettura del file.
+• Prima di scegliere i campi, guarda esempi reali con 'head -n 5 access.log' e 'head -n 5 services.csv'.
+---
+[STRATEGIA & BEST PRACTICES]
+• Posizione di lavoro: assicurati di trovarti in '${LAB_TRAINING_ROOT:-/workspace/training}/text-lab' (usa 'pwd').
+• Ispeziona sempre la struttura dei file prima di elaborarli:
+  head -n 5 access.log services.csv
+• Task 1: cerca 'ERROR' e passa il flusso a 'wc -l', ridirigendo l'output con '>'.
+• Task 2: seleziona le righe con codice HTTP 500 ($4 == 500), estrai l'indirizzo IP ($1) e ordinali con 'sort -u'.
+• Task 3: su services.csv specifica '-F,', somma il valore della colonna 3 ($3) per il servizio 'api' e stampa il totale in 'END'.
+• Task 4: scrivi la riga iniziale di 'summary.txt'.
+• 'grep' distingue maiuscole e minuscole. 'sort -u' ordina e rimuove duplicati; 'sort -n' ordina numeri.
+---
+[COMANDI GUIDATI & ALTERNATIVE]
+1. Conteggio righe di errore:
+   grep 'ERROR' access.log | wc -l > error_count.txt
+
+2. IP con status HTTP 500 (ordinati e unici):
+   awk '$4 == 500 { print $1 }' access.log | sort -u > failing_ips.txt
+
+3. Somma della colonna requests per il servizio 'api':
+   awk -F, 'NR > 1 && $1 == "api" { sum += $3 } END { print sum }' services.csv > api_total.txt
+
+4. File summary:
+   printf 'log analysis complete\n' > summary.txt
+   oppure:
+   echo 'log analysis complete' > summary.txt
+---
+[VERIFICA MANUALE AUTONOMA]
+Prima di lanciare 'lab check 05-text-processing', confronta i tuoi risultati:
+• Controlla i valori generati:
+  cat error_count.txt   # Atteso: 4
+  cat failing_ips.txt   # Atteso: 10.0.0.2 e 10.0.0.7
+  cat api_total.txt     # Atteso: 340 (120 + 150 + 70)
+  cat summary.txt       # Atteso: log analysis complete

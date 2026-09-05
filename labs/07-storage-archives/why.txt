@@ -1,0 +1,5 @@
+RIPASSO RAPIDO
+  df risponde alla domanda: quanto spazio resta sul filesystem?
+  du risponde alla domanda: quanto pesa questa directory o questo file?
+  tar conserva struttura e contenuti in un archivio trasportabile.
+  Lavorare con percorsi relativi evita archivi che provano a ricreare directory assolute.

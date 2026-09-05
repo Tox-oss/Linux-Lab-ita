@@ -1,0 +1,10 @@
+.DS_Store
+*.swp
+*~
+.lab-state/
+*.tar.gz
+*.tar
+.opencode/
+reports/
+contexto/
+*.gra

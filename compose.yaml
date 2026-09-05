@@ -1,0 +1,14 @@
+services:
+  lab:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: alpine-latest-assisted-labs:latest
+    container_name: assisted-labs
+    stdin_open: true
+    tty: true
+    volumes:
+      - Alpine_Latest:/workspace
+
+volumes:
+  Alpine_Latest:

@@ -1,0 +1,47 @@
+[CONCETTO] Modello dei Permessi POSIX (rwx, UGO e Notazioni)
+• In Linux ogni file e directory è regolato da 3 livelli di accesso:
+  - User/Owner (u): proprietario del file.
+  - Group (g): gruppo a cui appartiene il file.
+  - Others (o): tutti gli altri utenti del sistema.
+• I 3 permessi base corrispondono a valori numerici ottali:
+  - Read (r) = 4
+  - Write (w) = 2
+  - eXecute (x) = 1
+• Esempi:
+  - 600 = (4+2) / 0 / 0 = rw------- (solo il proprietario può leggere e scrivere).
+  - 775 = (4+2+1) / (4+2+1) / (4+1) = rwxrwxr-x (owner e gruppo controllo completo, altri sola lettura e accesso).
+• Nota fondamentale: su una directory, il bit 'x' (eseguibile) serve per poter entrare nella cartella e accedere ai suoi file.
+• Su una directory: r elenca i nomi, w crea/rimuove voci, x permette di attraversarla e accedere agli elementi.
+---
+[STRATEGIA & BEST PRACTICES]
+• Posizione di lavoro: assicurati di trovarti in '${LAB_TRAINING_ROOT:-/workspace/training}/perms-lab' (usa 'pwd').
+• Per aggiungere il bit di esecuzione senza modificare gli altri bit usa 'chmod a+x'; non è sempre equivalente a impostare 755.
+• Per impostare permessi rigidi e precisi (come 600 per file privati o 775 per cartelle condivise), la notazione numerica 'chmod <modo> <bersaglio>' è la più rapida e sicura.
+• Crea la cartella prima di impostarne i permessi e scrivervi all'interno il file README.txt.
+---
+[COMANDI GUIDATI & ALTERNATIVE]
+1. Bit eseguibile per tutti:
+   chmod a+x scripts/run.sh
+   (valide anche: chmod +x scripts/run.sh  oppure  chmod 755 scripts/run.sh)
+
+2. File privato (solo proprietario):
+   chmod 600 private.txt
+
+3. Creazione directory e permessi di gruppo:
+   mkdir -p dropbox
+   chmod 775 dropbox
+
+4. Scrittura del file nel posto corretto:
+   printf 'permissions matter\n' > dropbox/README.txt
+   oppure:
+   echo 'permissions matter' > dropbox/README.txt
+Nota di sicurezza: controlla sempre il percorso con pwd e ls; non usare chmod -R in questo esercizio.
+---
+[VERIFICA MANUALE AUTONOMA]
+Prima di eseguire 'lab check 02-permissions', verifica le modalità con 'stat' o 'ls':
+• Controlla i permessi in formato ottale e simbolico:
+  stat -c '%a %A %n' scripts/run.sh private.txt dropbox
+• Ispeziona il contenuto del file creato:
+  cat dropbox/README.txt
+• Test rapido di esecuzione:
+  ./scripts/run.sh

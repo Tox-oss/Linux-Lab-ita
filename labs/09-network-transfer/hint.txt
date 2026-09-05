@@ -1,0 +1,47 @@
+[CONCETTO] Diagnostica Rete e Copia Dati
+* 'ip' legge e configura interfacce e indirizzi; qui lo usi solo in lettura.
+* 'ss' mostra socket aperti, porte in ascolto e connessioni.
+* 'ping' verifica connettivita ICMP verso un host.
+* 'curl' recupera risorse da URL; lo schema file:// legge un file locale con la stessa interfaccia.
+* 'ssh' e' il client per sessioni remote cifrate; '-V' stampa la versione.
+* 'scp' copia file con sintassi simile a cp, anche localmente.
+* 'rsync -a' sincronizza alberi mantenendo metadati utili.
+---
+[STRATEGIA & BEST PRACTICES]
+* Usa 127.0.0.1 per restare nel container e non dipendere da Internet.
+* Il reset avvia un piccolo listener locale sulla porta 8088: non devi crearlo tu.
+* Per curl con file:// serve un percorso assoluto. Dal WORKDIR puoi usare file://$PWD/remote/status.json.
+* Per rsync, la slash finale in 'remote/' significa "copia il contenuto della directory".
+---
+[COMANDI GUIDATI & ALTERNATIVE]
+1. CIDR loopback:
+   ip -o -4 addr show lo | awk '{ print $4 }' > loopback_cidr.txt
+
+2. Porta in ascolto:
+   ss -ltn | grep ':8088' > listening_8088.txt
+
+3. Ping locale:
+   ping -c 1 127.0.0.1 > ping_localhost.txt
+
+4. Curl su file locale:
+   curl -s "file://$PWD/remote/status.json" > fetched_status.json
+
+5. Versione SSH:
+   ssh -V > ssh_version.txt 2>&1
+
+6. Copia con scp:
+   mkdir -p copies
+   scp remote/status.json copies/status.scp.json
+
+7. Sincronizzazione con rsync:
+   rsync -a remote/ mirror/
+---
+[VERIFICA MANUALE AUTONOMA]
+Prima di lanciare 'lab check 09-network-transfer':
+* cat loopback_cidr.txt deve essere 127.0.0.1/8.
+* cat listening_8088.txt deve contenere :8088.
+* grep '0% packet loss' ping_localhost.txt deve trovare una riga.
+* cmp remote/status.json fetched_status.json deve riuscire.
+* ssh_version.txt deve iniziare con OpenSSH_.
+* cmp remote/status.json copies/status.scp.json deve riuscire.
+* test -f mirror/nested/info.txt && echo OK conferma rsync.

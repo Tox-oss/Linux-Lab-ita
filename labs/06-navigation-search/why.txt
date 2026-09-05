@@ -1,0 +1,6 @@
+RIPASSO RAPIDO
+  cd cambia la directory corrente della shell; pwd conferma dove sei.
+  ls fotografa il contenuto immediato di una directory.
+  find attraversa l'albero di directory e restituisce percorsi riusabili in pipe.
+  tail evita di leggere log interi quando servono solo gli eventi piu recenti.
+  less e' un pager: permette ricerca e navigazione senza modificare il file.
