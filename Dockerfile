@@ -2,12 +2,19 @@
 # L'obiettivo e' un'immagine piu' piccola e veloce di Ubuntu, mantenendo la
 # stessa esperienza: CLI, 9 lab, man page localizzate.
 
-# ---- Stadio "mans": estrae le man page IT dal pacchetto Ubuntu ----
-# manpages-it non esiste su Alpine: le portiamo una sola volta, in build,
-# da ubuntu:24.04 e le copiamo come file statici (solo la traduzione).
-FROM ubuntu:24.04 AS mans
-RUN apt-get update \
- && apt-get install -y --no-install-recommends manpages-it \
+# ---- Stadio "mans": estrae le man page EN + IT ----
+# Su Alpine il pacchetto man-pages contiene solo ~18 pagine e manpages-it non
+# esiste come pacchetto (ne' in Ubuntu moderne, che lo forniscono come stub
+# vuoto). Debian bookworm ha sia i man per i comandi del corso sia la
+# traduzione italiana: installiamo gli stessi tool del finale e copiamo
+# /usr/share/man come file statici. Il container slim esclude /usr/share/man
+# via dpkg (path-exclude): lo disattiviamo per estrarre le pagine.
+FROM debian:bookworm-slim AS mans
+RUN sed -i '/path-exclude/s/^/#/' /etc/dpkg/dpkg.cfg.d/docker \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends --reinstall \
+    coreutils findutils grep gawk sed tar procps passwd login sudo util-linux bash less \
+    openssh-client iproute2 iputils-ping nano rsync curl tree manpages manpages-it \
  && rm -rf /var/lib/apt/lists/*
 
 # ---- Stadio finale: Alpine ----
@@ -57,8 +64,8 @@ RUN apk add --no-cache \
       tree \
  && rm -rf /var/cache/apk/*
 
-# Le man page IT arrivano dallo stadio mans e vengono indicizzate con mandb.
-COPY --from=mans /usr/share/man/it /usr/share/man/it
+# Le man page EN + IT arrivano dallo stadio mans e vengono indicizzate con mandb.
+COPY --from=mans /usr/share/man /usr/share/man
 RUN mandb -c >/dev/null 2>&1 || true
 
 # Lab ufficiali: SOLO in immagine. Il volume monta /workspace per i file di lavoro.

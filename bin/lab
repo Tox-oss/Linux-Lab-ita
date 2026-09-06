@@ -199,7 +199,8 @@ welcome() {
       ;;
     2|arcade|Arcade|ARCADE)
       if is_hardcade; then
-        warn "Sei in HARDCADE: non puoi tornare a STANDARD/ARCADE in questa sessione."
+        warn "Sei in HARDCADE: non puoi cambiare modalita qui."
+        printf 'Per uscire da HARDCADE:  lab mode standard --exit\n\n'
       else
         echo "arcade" > "$NORMAL_STATE_DIR/mode"
         echo 1 > "$NORMAL_STATE_DIR/mode-chosen"
@@ -222,7 +223,8 @@ welcome() {
       ;;
     *|1|standard|std|classic|relax)
       if is_hardcade; then
-        warn "Sei in HARDCADE: non puoi tornare a STANDARD/ARCADE in questa sessione."
+        warn "Sei in HARDCADE: non puoi cambiare modalita qui."
+        printf 'Per uscire da HARDCADE:  lab mode standard --exit\n\n'
       else
         echo "standard" > "$NORMAL_STATE_DIR/mode"
         echo 1 > "$NORMAL_STATE_DIR/mode-chosen"
@@ -483,13 +485,16 @@ hardcade_game_over() {
     bash "$LABS/$id/reset.sh" >/dev/null 2>&1 || true
   done
   rm -f "$HARDCADE_STATE_DIR/done-"* "$HARDCADE_STATE_DIR/hint-"* \
-    "$HARDCADE_STATE_DIR/lives-"* "$HARDCADE_STATE_DIR/errors"
-  echo 0 > "$HARDCADE_STATE_DIR/errors"
+        "$HARDCADE_STATE_DIR/lives-"* "$HARDCADE_STATE_DIR/errors" \
+        "$HARDCADE_STATE_DIR/help-used-"* "$HARDCADE_STATE_DIR/mode-chosen" \
+        "$HARDCADE_STATE_DIR/active"
+  rmdir "$HARDCADE_STATE_DIR" 2>/dev/null || true
   hardcade_banner
   printf 'La sessione HARDCADE e i suoi progressi sono stati azzerati.\n'
   printf 'ATTENZIONE: se avevi gia risolto qualche esercizio, il lavoro valido\n'
-  printf 'e stato resettato insieme al resto. Per riprovare da zero,\n'
-  printf 'avvia un nuovo container (un nuovo 'hardcade' parte pulito).\n\n'
+  printf 'viveva su un salvataggio separato: i tuoi lab STANDARD/ARCADE restano\n'
+  printf 'intatti. HARDCADE si chiude qui: la prossima esecuzione di lab parte\n'
+  printf 'in modalita standard. Per riprovare la sfida:  lab mode hardcade --force\n\n'
   exit 42
 }
 
@@ -710,8 +715,18 @@ hardcade_refuse() {
 cmd_mode() {
   ensure_state
   if is_hardcade; then
+    if [ "${1:-}" = "standard" ] && [ "${2:-}" = "--exit" ]; then
+      rm -f "$HARDCADE_STATE_DIR/active" "$HARDCADE_STATE_DIR/errors" \
+            "$HARDCADE_STATE_DIR/help-used-"*
+      rmdir "$HARDCADE_STATE_DIR" 2>/dev/null || true
+      ok "Uscita da HARDCADE: i progressi hardcade sono stati abbandonati."
+      printf 'I tuoi lab STANDARD/ARCADE sono intatti. Riprendi con:  lab list\n\n'
+      return 0
+    fi
     ok "Modalita corrente: HARDCADE (3 errori condivisi per sessione)"
-    printf 'Sessione bloccata: non e possibile tornare a STANDARD o ARCADE.\n'
+    printf 'Sessione bloccata: non e possibile cambiare modalita qui.\n'
+    printf 'Per uscire da HARDCADE e tornare al corso:  lab mode standard --exit\n'
+    printf '\n'
     printf 'Giocatore: %s\n' "$(id -un 2>/dev/null || printf '?')"
     printf 'Vite disponibili: %s\n\n' "$(render_hardcade_lives)"
     return 0

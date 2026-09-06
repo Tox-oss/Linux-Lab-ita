@@ -14,15 +14,15 @@ soluzione di riferimento.
 # 1. esegui l'immagine (mounta un volume persistente per i tuoi progressi)
 docker run --rm -it \
   --name assisted-labs \
-  -v Ubuntu_Latest:/workspace \
-  marshfellow/assisted-labs:latest
+  -v Alpine_Latest:/workspace \
+  alpine-latest-assisted-labs:latest
 
 # 2. dentro il container
 lab list          # elenco dei 9 lab
 lab start 01-filesystem
 ```
 
-> L'immagine `linux-lab` monta il volume `Ubuntu_Latest` su `/workspace`:
+> L'immagine `assisted-labs` monta il volume `Alpine_Latest` su `/workspace`:
 > i file che crei dentro `/workspace/training` restano tra una sessione e
 > l'altra. I lab ufficiali vivono nell'immagine (`/opt`), non sul volume.
 
@@ -31,7 +31,7 @@ lab start 01-filesystem
 ```bash
 git clone https://github.com/Tox-oss/Linux-Lab.git
 cd Linux-Lab
-make build   # oppure: docker build -t linux-lab:latest .
+make build   # oppure: docker build -t alpine-latest-assisted-labs:latest .
 make run     # sessione interattiva
 make test    # esegue tutti i 9 lab in modalità anti-cheat
 ```
@@ -74,9 +74,24 @@ lab quit           chiudi la sessione
 
 ## Modalità di gioco (easter egg)
 
-La modalità **standard** è quella del corso. **Arcade** e **hardcade** sono un
-gioco opzionale nascosto: 3 vite a errore, e la sfidanzia a run perfetta per
-sbloccare HARDCADE (intro "matrix rain" inclusa).
+La modalità **standard** è quella del corso (tentativi illimitati e indizi
+gratuiti). **Arcade** e **hardcade** sono un gioco opzionale nascosto,
+separato dallo studio: non servono per completare i 9 lab.
+
+- **Arcade** — sfida a 3 vite (`lab mode arcade`). Ogni errore costa un
+  cuore. Gli indizi sono limitati (3 lampadine per lab): **il primo indizio
+  è gratuito, dal secondo in poi ogni `lab hint` costa 1 vita**.
+- **HARDCADE** — seconda sfida segreta, sbloccata da una run ARCADE perfetta
+  (tutti i 9 lab senza perdere cuori). 3 errori condivisi per sessione:
+  ogni aiuto (`lab hint`/`lab solution`) consuma 1 errore e disabilita
+  l'aiuto per quel lab; al terzo errore la sessione si chiude e il gioco
+  riparte. Il salvataggio HARDCADE è separato da quello standard.
+  A scopo dimostrativo si entra con `LAB_EH_UNLOCK=1 lab mode hardcade`
+  oppure `lab mode hardcade --force`.
+- **Uscita**: dentro HARDCADE non si cambia modalità dal menu, ma si esce
+  sempre con `lab mode standard --exit` (i progressi STANDARD/ARCADE restano
+  intatti). Dopo un Game Over, la prossima esecuzione di `lab` parte in
+  modalità standard.
 
 ## Requisiti
 

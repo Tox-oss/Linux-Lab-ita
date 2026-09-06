@@ -27,6 +27,7 @@
 | QA Grafico Graph | `reports/<task>-graph-report.md` |
 | Correzione Nux | `reports/<task>-nux-correzione.md` |
 | Ritest Lim post-correzione | `reports/<task>-report-ritest.md` |
+| Audit comportamentale (effimero) | `reports/<task>-audit-report.md` |
 
 ### Memoria di lavoro (Cronista)
 
@@ -56,6 +57,7 @@ Ciclo di QA del corso. Orchestrazione completa nella skill `staffetta-lim-gra-nu
 | — registrazione automatica | **Cronista** | — | `contexto/<task>.md` aggiornato |
 | 4. Ritest | Lim | `lim-qa` | Report di ritest |
 | — registrazione automatica | **Cronista** | — | `contexto/<task>.md` aggiornato |
+| 5. Audit | Auditor | `audit-staffetta` | Audit comportamentale (effimero) |
 
 Il **Cronista** è un subagent che **entra in azione automaticamente a ogni confine di fase**:
 non appena Lim salva il report, non appena Graph salva il report, e quando Nux ha finito le
@@ -63,6 +65,13 @@ correzioni (e dopo il ritest), il coordinatore invoca il subagent `cronista` per
 aggiornare il contesto compresso in `contexto/` prima di passare alla fase successiva. Offre
 permanenza e coerenza tra le sessioni separate della staffetta. Definizione dell'agente in
 `.opencode/agent/cronista.md`; sequenza operativa nella skill `staffetta-lim-gra-nux`.
+
+L'**Auditor** (subagent in `.opencode/agent/auditor.md`, skill `audit-staffetta`) chiude il
+giro: a staffetta conclusa raccoglie i report degli agenti, estrae i segnali di comportamento
+(aderenza alle skill di riferimento, errori procedurali, qualità dei report) e **propone**
+miglioramenti alle skill `lim-qa`/`graph-qa`/`nux-fix`. Le proposte non vengono applicate
+automaticamente: decide l'utente. Il report `reports/<task>-audit-report.md` è **effimero**:
+viene eliminato all'avvio del giro successivo.
 
 ## Indice Skill
 
@@ -74,6 +83,7 @@ Le skill vivono in `.opencode/skills/<nome>/SKILL.md`. Ogni agente le carica con
 | `lim-qa` | Lim | prima di testare un lab / giro rapido / ritest |
 | `graph-qa` | Graph | prima di analizzare Dockerfile e output CLI |
 | `nux-fix` | Nux | prima di prendere in carico i report e correggere |
+| `audit-staffetta` | Auditor | a fine staffetta (dopo il ritest, prima del versionamento) per l'audit comportamentale degli agenti |
 
 ## Versionamento automatico
 

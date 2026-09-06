@@ -133,6 +133,9 @@ per chi, dopo aver finito i 9 lab, vuole mettersi alla prova.
 - **`lab mode arcade`** — sfida a 3 vite (❤️ ❤️ ❤️): ogni errore costa un cuore;
   se finisci le vite parte il "Game Over". Mette alla prova le conoscenze già
   apprese, non insegna materiale nuovo.
+  Gli indizi sono limitati: **3 lampadine per lab**, e l'uso è progressivamente
+  più caro — **il primo `lab hint` è gratuito, dal secondo in poi ogni indizio
+  costa 1 vita** (`lab hint <id> --all` è bloccato in questa modalità).
 - **HARDCADE è un secondo easter egg, ancora più nascosto**: si sblocca solo
   completando **tutti i 9 lab in modalità ARCADE senza mai perdere un cuore**
   (run perfetta). Al primo accesso appare un'intro ASCII "matrix rain".
@@ -140,9 +143,16 @@ per chi, dopo aver finito i 9 lab, vuole mettersi alla prova.
   `LAB_EH_UNLOCK=1 lab mode hardcade` oppure `lab mode hardcade --force`.
 - `hardcade` usa un salvataggio separato `/workspace/training/.hardcade-state`
   e la sua area di lavoro `/workspace/hardcade-training` (non tocca i tuoi lab
-  standard). Una volta entrati non è possibile tornare a standard o arcade nella
-  stessa sessione; al terzo errore i progressi Hardcade vengono azzerati e il
-  terminale viene chiuso.
+  standard). Dentro HARDCADE valgono **3 errori condivisi per sessione**: ogni
+  consultazione di `lab hint` o `lab solution` consuma 1 errore e disabilita
+  l'aiuto per quel lab (OTK). Al terzo errore i progressi Hardcade vengono
+  azzerati, il terminale viene chiuso e la prossima esecuzione di `lab`
+  riparte in **modalità standard** (i tuoi lab STANDARD/ARCADE restano intatti:
+  lo stato vive sul volume persistente, non nel container).
+- **Uscita da HARDCADE**: non si cambia modalità dal menu, ma si esce in
+  qualsiasi momento con **`lab mode standard --exit`** — i progressi
+  STANDARD/ARCADE sono intatti. Per rientrare nella sfida:
+  `lab mode hardcade --force` (o ri-sbloccandola con una nuova run perfetta).
 - **Riepilogo**: `standard` = imparare · `arcade` = sfida · `hardcade` = easter egg.
   Si cambia modalità con `lab mode <nome>` (es. `lab mode arcade`), ma per seguire
   il corso ti basta e ti avanza la modalità **standard**.

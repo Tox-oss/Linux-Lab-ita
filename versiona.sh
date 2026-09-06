@@ -76,7 +76,13 @@ ref_name_of_archive() {
             ref=$(tar xzOf "$t" index.json 2>/dev/null | python3 -c 'import json,sys
 try:
     d = json.load(sys.stdin)
-    print(d["manifests"][0]["annotations"].get("org.opencontainers.image.ref.name", ""))
+    a = d["manifests"][0].get("annotations", {})
+    full = a.get("io.containerd.image.name", "")
+    if full:
+        print(full.split("/")[-1].rsplit(":", 1)[0])
+    else:
+        ref = a.get("org.opencontainers.image.ref.name", "")
+        print(ref.rsplit(":", 1)[0] if ":" in ref else "")
 except Exception:
     print("")' 2>/dev/null || true)
             rm -rf "$stage"
@@ -238,8 +244,8 @@ if [[ "$OVERWRITE" == "true" && "$MAX_VER" -gt 0 ]]; then
     done < <(find "$VERSIONI_DIR" -maxdepth 1 -type f -name 'ver *.tar.gz' 2>/dev/null | sort)
     if [[ -n "$guard_archive" ]]; then
         guard_ref=$(ref_name_of_archive "$guard_archive")
-        if [[ -n "$guard_ref" && "${guard_ref%%:*}" != "$IMAGE_BASE" ]]; then
-            die "Guardia anti-crossover: '$guard_archive' contiene l'immagine '${guard_ref%%:*}', diversa dalla base attuale '${IMAGE_BASE}'. Non sovrascrivere lo snapshot della base precedente: crea una nuova versione senza --overwrite."
+        if [[ "$guard_ref" != "$IMAGE_BASE" ]]; then
+            die "Guardia anti-crossover: '$guard_archive' contiene l'immagine '${guard_ref}', diversa dalla base attuale '${IMAGE_BASE}'. Non sovrascrivere lo snapshot della base precedente: crea una nuova versione senza --overwrite."
         fi
     fi
 fi

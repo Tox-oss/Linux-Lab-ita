@@ -157,6 +157,18 @@ LAB_EH_UNLOCK=1 lab mode hardcade
 # oppure
 lab mode hardcade --force
 ```
+
+> ⚠️ **ATTENZIONE**: HARDCADE è **irreversibile per la sessione** e vive sul
+> **volume persistente**: non sparisce riavviando o ricreando il container.
+> Usa un salvataggio separato (`/workspace/training/.hardcade-state`), quindi
+> i tuoi lab STANDARD/ARCADE restano intatti.
+>
+> **Per uscire in qualsiasi momento e tornare al corso:**
+> ```bash
+> lab mode standard --exit
+> ```
+> Al terzo errore la sessione HARDCADE si chiude da sola e la prossima
+> esecuzione di `lab` riparte in modalità standard.
 INNER_EOF
 
 # Copia anche i sorgenti se presenti
