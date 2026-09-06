@@ -24,6 +24,7 @@ FROM alpine:3.24
 ARG LAB_MODE=standard
 
 # Variabili d'ambiente: percorso lab, PATH e locale UTF-8.
+# LAB_MODE qui e' l'ARG sopra promosso a ENV: resta leggibile a runtime.
 # Sulla libc musl il default e' gia' UTF-8-aware, ma LANG/LC_ALL espliciti
 # (musl-locales) rendono stabile ogni misurazione (es. wc -m del banner).
 ENV LAB_ROOT=/opt/assisted-labs \
@@ -65,6 +66,8 @@ RUN apk add --no-cache \
  && rm -rf /var/cache/apk/*
 
 # Le man page EN + IT arrivano dallo stadio mans e vengono indicizzate con mandb.
+# Attenzione: il COPY si MERGE sovrascrivendo /usr/share/man, quindi le pagine
+# Debian (2400+) SOSTITUISCONO quelle del pacchetto man-pages di Alpine.
 COPY --from=mans /usr/share/man /usr/share/man
 RUN mandb -c >/dev/null 2>&1 || true
 

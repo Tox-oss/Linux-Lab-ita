@@ -12,7 +12,7 @@
 • Questi comandi modificano utenti e gruppi nel container e richiedono privilegi amministrativi. Non modificano l'host Docker.
 ---
 [STRATEGIA & BEST PRACTICES]
-• Posizione di lavoro: verifica di trovarti in '${LAB_TRAINING_ROOT:-/workspace/training}/users-lab' (usa 'pwd').
+• Posizione di lavoro: verifica di trovarti in '/workspace/training/users-lab' (usa 'pwd').
 • Ordine logico delle operazioni:
   1. Crea il gruppo 'devops' con 'groupadd'.
   2. Crea l'utente 'learner' specificando i flag per home e shell bash.

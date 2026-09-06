@@ -8,7 +8,7 @@
 • Prima di rimuovere qualcosa, usa 'pwd' e 'ls' per verificare il percorso.
 ---
 [STRATEGIA & ATTENZIONE AI PERCORSI]
-• Posizione di lavoro: verifica di trovarti nella cartella dell'esercizio con 'pwd' (atteso: ${LAB_TRAINING_ROOT:-/workspace/training}/fs-lab).
+• Posizione di lavoro: verifica di trovarti nella cartella dell'esercizio con 'pwd' (atteso: /workspace/training/fs-lab).
 • Struttura finale attesa:
   project/
   ├── data.txt

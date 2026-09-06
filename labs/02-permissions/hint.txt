@@ -14,7 +14,7 @@
 • Su una directory: r elenca i nomi, w crea/rimuove voci, x permette di attraversarla e accedere agli elementi.
 ---
 [STRATEGIA & BEST PRACTICES]
-• Posizione di lavoro: assicurati di trovarti in '${LAB_TRAINING_ROOT:-/workspace/training}/perms-lab' (usa 'pwd').
+• Posizione di lavoro: assicurati di trovarti in '/workspace/training/perms-lab' (usa 'pwd').
 • Per aggiungere il bit di esecuzione senza modificare gli altri bit usa 'chmod a+x'; non è sempre equivalente a impostare 755.
 • Per impostare permessi rigidi e precisi (come 600 per file privati o 775 per cartelle condivise), la notazione numerica 'chmod <modo> <bersaglio>' è la più rapida e sicura.
 • Crea la cartella prima di impostarne i permessi e scrivervi all'interno il file README.txt.

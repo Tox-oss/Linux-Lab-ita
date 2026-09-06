@@ -11,7 +11,7 @@
 • Prima di scegliere i campi, guarda esempi reali con 'head -n 5 access.log' e 'head -n 5 services.csv'.
 ---
 [STRATEGIA & BEST PRACTICES]
-• Posizione di lavoro: assicurati di trovarti in '${LAB_TRAINING_ROOT:-/workspace/training}/text-lab' (usa 'pwd').
+• Posizione di lavoro: assicurati di trovarti in '/workspace/training/text-lab' (usa 'pwd').
 • Ispeziona sempre la struttura dei file prima di elaborarli:
   head -n 5 access.log services.csv
 • Task 1: cerca 'ERROR' e passa il flusso a 'wc -l', ridirigendo l'output con '>'.

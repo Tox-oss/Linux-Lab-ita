@@ -103,6 +103,7 @@ Questo script:
 - **Cartella live**: `ver latest/` è lo stato corrente non numerato (aggiornata a ogni versione).
 - **Docker tag**: `alpine-latest-assisted-labs:0001`, `:0002`, ...
 - **Latest**: `alpine-latest-assisted-labs:latest` = sempre l'ultima versione
+- **Ritenzione**: a fine giro la cronologia viene limitata a `ver latest` + le 4 versioni numerate più recenti (5 voci totali); le eccedenti (archivi e cartelle legacy `ver NNNN - ...`) vengono eliminate dal **Cronista** al salvataggio, previo elenco all'utente. I tag Docker storici non vengono rimossi e `Buon Divertimento/` non viene mai toccato.
 
 ### Sovrascrittura della versione più recente
 Per aggiornare lo snapshot della versione numerata con numero più alto (senza crearne una nuova):

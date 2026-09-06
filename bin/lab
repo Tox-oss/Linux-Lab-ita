@@ -493,8 +493,9 @@ hardcade_game_over() {
   printf 'La sessione HARDCADE e i suoi progressi sono stati azzerati.\n'
   printf 'ATTENZIONE: se avevi gia risolto qualche esercizio, il lavoro valido\n'
   printf 'viveva su un salvataggio separato: i tuoi lab STANDARD/ARCADE restano\n'
-  printf 'intatti. HARDCADE si chiude qui: la prossima esecuzione di lab parte\n'
-  printf 'in modalita standard. Per riprovare la sfida:  lab mode hardcade --force\n\n'
+  printf 'intatti. HARDCADE si chiude qui: il prossimo lab parte nella tua\n'
+  printf 'modalita precedente (STANDARD o ARCADE). Per riprovare la sfida:\n'
+  printf '  lab mode hardcade --force\n\n'
   exit 42
 }
 

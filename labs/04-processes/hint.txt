@@ -7,7 +7,7 @@
 • Un job id come [1] appartiene alla shell; il PID è il numero assegnato dal kernel. 'jobs' mostra i job della shell, 'ps' i processi.
 ---
 [STRATEGIA & ATTENZIONE ALLA SUBSHELL]
-• Posizione di lavoro: assicurati di trovarti in '${LAB_TRAINING_ROOT:-/workspace/training}/process-lab' (usa 'pwd').
+• Posizione di lavoro: assicurati di trovarti in '/workspace/training/process-lab' (usa 'pwd').
 • Insidia tipica della shell:
   Se scrivi su una sola riga 'cd ... && sleep 3600 &', il carattere '&' applica il background all'intera sequenza creando una subshell: '$!' punterebbe alla subshell temporanea e non al processo sleep.
 • Regola d'oro: entra prima nella cartella di lavoro, lancia 'sleep 3600 &' come istruzione a sé e subito dopo salva '$!' nel file 'worker.pid'. Salvalo prima di un altro background job.
