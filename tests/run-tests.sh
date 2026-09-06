@@ -7,7 +7,8 @@ set -uo pipefail
 
 ROOT=/opt/assisted-labs
 LABS_DIR="$ROOT/labs"
-IDS="01-filesystem 02-permissions 03-users-groups 04-processes 05-text-processing 06-navigation-search 07-storage-archives 08-system-admin 09-network-transfer"
+IDS="$(find "$LABS_DIR" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | sort)"
+[ -z "$IDS" ] && IDS="01-filesystem 02-permissions 03-users-groups 04-processes 05-text-processing 06-navigation-search 07-storage-archives 08-system-admin 09-network-transfer"
 TRAINING="${LAB_TRAINING_ROOT:-/workspace/training}"
 
 declare -i TESTS_OK=0 TESTS_BAD=0
@@ -43,6 +44,7 @@ sabotage() {
     07-storage-archives)  rm -f "$base/storage-lab/service-a.tar.gz" ;;
     08-system-admin)      rm -f "$base/admin-lab/top_snapshot.txt" ;;
     09-network-transfer)  rm -f "$base/net-lab/fetched_status.json" ;;
+    10-file-comparison)   rm -f "$base/diff-lab/release_v2/app.conf" "$base/diff-lab/release_diff.txt" ;;
   esac
 }
 
@@ -127,4 +129,4 @@ if [ "$TESTS_BAD" -gt 0 ]; then
   printf '\n\033[1;31mSUITE FALLITA\033[0m\n'
   exit 1
 fi
-printf '\n\033[1;32mSUITE SUPERATA (9/9 lab)\033[0m\n'
+printf '\n\033[1;32mSUITE SUPERATA (%s/%s lab)\033[0m\n' "$(printf '%s\n' $IDS | wc -l)" "$(printf '%s\n' $IDS | wc -l)"

@@ -1,0 +1,6 @@
+RIPASSO RAPIDO
+  diff mostra COSA e' cambiato; cmp dice solo SE due file sono identici; comm confronta due liste ordinate dividendole in tre gruppi.
+  diff -u e' il formato "unified" (righe con - rimosse, righe con + aggiunte): lo stesso formato usato da git diff.
+  cmp -s e' silenzioso: usalo negli script, quando serve solo lo stato di uscita (0 = identici).
+  comm richiede input ordinato: su dati reali, passa sempre prima da 'sort'.
+  diff -r estende diff a intere directory, file per file.

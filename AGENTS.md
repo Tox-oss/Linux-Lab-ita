@@ -8,7 +8,7 @@
 
 | Percorso | Contenuto |
 |----------|-----------|
-| `labs/01-filesystem` … `09-network-transfer` | I 9 lab: ogni cartella ha `README.md` (consegna con AVVIO/DATI/SUGGERIMENTI), `check.sh` (verifica), `reset.sh`, `solution.sh`, `hint.txt`, `theme.txt`, `why.txt` |
+| `labs/01-filesystem` … `10-file-comparison` | I lab del corso: ogni cartella ha `README.md` (consegna con AVVIO/DATI/SUGGERIMENTI), `check.sh` (verifica), `reset.sh`, `solution.sh`, `hint.txt`, `theme.txt`, `why.txt` |
 | `bin/lab` | CLI del corso (`lab start`, `lab check`, `lab reset`, `lab list`, ...) |
 | `lib/common.sh` | Helper condivisi per i check |
 | `startup-banner.sh` | Banner di benvenuto nella shell interattiva |
@@ -101,6 +101,9 @@ Le skill vivono in `.opencode/skills/<nome>/SKILL.md`. Ogni agente le carica con
 | `graph-qa` | Graph | prima di analizzare Dockerfile e output CLI |
 | `nux-fix` | Nux | prima di prendere in carico i report e correggere |
 | `audit-staffetta` | Auditor | a fine staffetta (dopo il ritest, prima del versionamento) per l'audit comportamentale degli agenti |
+| `shell-code-recon` | Nux, Graph | quando serve capire cosa fa uno script `.sh` prima di verificarne/correggerne il contenuto |
+| `cli-survey` | Graph, Nux, Lim | prima di invocare/analizzare il CLI `lab` (subcomandi, modalita, LAB_QA_MODE, stato su disco) |
+| `lab-structure-map` | tutti | per orientarsi nella struttura dei lab (consegna, check, helper, suite) senza rileggerli |
 
 ## Versionamento automatico
 
@@ -157,7 +160,7 @@ cd ~/assisted-labs && make build
 | `make version` | Stessa cosa di `./versiona.sh` |
 | `make build` | Ricostruisce latest |
 | `make run` | Avvia sessione interattiva |
-| `make test` | Testa tutti i 9 lab |
+| `make test` | Testa tutti i lab |
 
 ## Regole per agenti
 - Dopo aver completato modifiche al codice, eseguire sempre `./versiona.sh` (in staffetta: a fine giro salvare **automaticamente come nuovo documento** con `./versiona.sh`; `--overwrite` solo su esplicita richiesta dell'utente)
