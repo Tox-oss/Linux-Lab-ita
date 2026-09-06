@@ -6,6 +6,20 @@ case $- in
   *) return 0 ;;
 esac
 
+# Prompt personale: se l'identita' e' stata creata dall'intro (utente salvato
+# sul volume), mostra NOME@container e il path, coerente con cio' che l'intro
+# ha promesso ("il tuo prompt personale sara' NOME@container").
+# E' settato PRIMA della guardia banner_shown cosi' vale anche dentro le shell
+# che ereditano ASSISTED_LABS_BANNER_SHOWN (es. `su - nome` avviato dall'intro).
+INTRO_NAME_FILE="${LAB_TRAINING_ROOT:-/workspace/training}/.intro-name"
+CUR_USER=$(id -un 2>/dev/null || true)
+SAVED_USER=""
+[ -f "$INTRO_NAME_FILE" ] && SAVED_USER=$(cat "$INTRO_NAME_FILE" 2>/dev/null || true)
+if [ -n "$SAVED_USER" ] && [ "$CUR_USER" = "$SAVED_USER" ]; then
+  PS1='\[\033[1;32m\]'"$SAVED_USER"'@container\[\033[0m\]:\[\033[1;34m\]\w\[\033[0m\]\$ '
+  export PS1
+fi
+
 if [ -n "${ASSISTED_LABS_BANNER_SHOWN:-}" ]; then
   return 0
 fi
@@ -36,6 +50,24 @@ else
   C_RST=
 fi
 
+# Intro "Primo Giorno" (primo accesso): chi sei, dove sei, perche' non root.
+# Eseguita solo al primo accesso (stato salvato sul volume) e solo con
+# terminale interattivo; idempotente e non bloccante in CI/pipe.
+# Al primo run lo script cambia utente (`su - nome`); quando la shell del nuovo
+# utente termina, l'intro esce con codice 42. In quel caso il box di benvenuto
+# e' gia' stato mostrato dalla shell del nuovo utente (o cmq l'intro ha gia'
+# accolto l'utente): lo saltiamo per non stamparlo due volte.
+if [ -t 0 ] && [ -t 1 ] \
+   && [ -z "${SKIP_INTRO:-}" ] \
+   && [ -f /opt/assisted-labs/bin/intro.sh ] \
+   && [ ! -f "${LAB_TRAINING_ROOT:-/workspace/training}/.intro-done" ]; then
+  bash /opt/assisted-labs/bin/intro.sh
+  rc=$?
+  if [ "$rc" -eq 42 ]; then
+    ASSISTED_LABS_NO_BOX=1
+  fi
+fi
+
 # Larghezza interna del box (celle tra i due bordi verticali).
 # Momo: i caratteri di disegno box si usano solo se il terminale li
 # supporta; altrimenti si ripiega su un box ASCII (+, -, |) che si
@@ -59,6 +91,13 @@ vlen()  { printf '%s' "$1" | sed -e "s/$(printf '\033')\[[0-9;]*m//g" | wc -m; }
 # mid: centra il testo dentro il box (W celle, meno 2 per i bordi di testo).
 mid()   { local t="$1" n left right; n=$(vlen "$t"); left=$(( (W - n) / 2 )); [ "$left" -lt 0 ] && left=0; right=$(( W - n - left )); printf '%s' "${C_GRN}${VB}"; printf '%*s' "$left" ""; printf '%s%*s' "$t" "$right" ""; printf '%s\n' "${VB}${C_RST}"; }
 bottom(){ printf '%s'   "${C_GRN}${BL}"; printf '%*s' "$W" "" | tr ' ' "$HB"; printf '%s\n' "${BR}${C_RST}"; }
+
+if [ -n "${ASSISTED_LABS_NO_BOX:-}" ]; then
+  printf '%s\n' ''
+  printf '%s\n' "${C_DIM}Hai chiuso la shell di ${C_BLD}$(cat /workspace/training/.intro-name 2>/dev/null || echo 'il tuo utente')${C_RST}${C_DIM}. Sei tornato a ${C_BLD}root${C_RST}${C_DIM}: usa ${C_BLD}su - nome${C_RST}${C_DIM} per rientrare o ${C_BLD}exit${C_RST}${C_DIM} per chiudere.${C_RST}"
+  printf '%s\n' ''
+  return 0
+fi
 
 top
 mid "${C_BLD}Assisted Linux Labs${C_RST}"

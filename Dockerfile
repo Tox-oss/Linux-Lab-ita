@@ -73,6 +73,7 @@ RUN mandb -c >/dev/null 2>&1 || true
 
 # Lab ufficiali: SOLO in immagine. Il volume monta /workspace per i file di lavoro.
 COPY bin/lab /opt/assisted-labs/bin/lab
+COPY bin/intro.sh /opt/assisted-labs/bin/intro.sh
 COPY lib/ /opt/assisted-labs/lib/
 COPY labs/ /opt/assisted-labs/labs/
 COPY contexto/ /opt/assisted-labs/contexto/
@@ -86,8 +87,11 @@ COPY bin/lab-completion.bash /etc/bash_completion.d/lab
 # Rendi eseguibili i tool del lab e crea il symlink 'lab' nel PATH di sistema
 # (eseguito DOPO i COPY; i file dei lab sono gia' eseguibili ma per sicurezza).
 RUN chmod +x /opt/assisted-labs/bin/lab \
+ && chmod +x /opt/assisted-labs/bin/intro.sh \
  && find /opt/assisted-labs/labs -name '*.sh' -exec chmod +x {} + \
- && ln -sfn /opt/assisted-labs/bin/lab /usr/local/bin/lab
+ && ln -sfn /opt/assisted-labs/bin/lab /usr/local/bin/lab \
+ && printf '%%wheel ALL=(ALL) ALL\n' > /etc/sudoers.d/wheel \
+ && chmod 440 /etc/sudoers.d/wheel
 
 # Area di lavoro dei lab + caricamento del banner nelle shell interattive.
 # Su Alpine bash legge /etc/bash/bashrc (non /etc/bash.bashrc).
