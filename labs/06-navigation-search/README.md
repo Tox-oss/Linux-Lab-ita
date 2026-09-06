@@ -69,6 +69,13 @@ NOTE
       oppure:  echo 'sre-oncall' > owner.txt
     (Il check non valida la TUA lettura, ma solo che owner.txt contenga esattamente
     sre-oncall come prima riga.)
+  - In un terminale NON interattivo (senza TTY, es. CI o pipe) less non si puo'
+    usare come descritto sopra. Alternativa che da' la stessa riga:
+      grep "Escalation owner" docs/runbook.txt
+    (stampa la riga 6 con il valore sre-oncall). Puoi anche estrarre il valore
+    direttamente:
+      grep "Escalation owner" docs/runbook.txt | sed "s/^Escalation owner: //"
+    Il risultato negli esempi qui sopra e' sempre sre-oncall.
   - Task 2: "ls -1 > root_listing.txt" fotografa la directory COSI' COME E'
     adesso. Se hai gia' creato altri file di output (es. current_path.txt) nello
     stesso WORKDIR, compaiono anche loro nella lista. Non e' un errore: il check

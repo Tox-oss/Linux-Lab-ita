@@ -67,6 +67,13 @@ aggiornare il contesto compresso in `contexto/` prima di passare alla fase succe
 permanenza e coerenza tra le sessioni separate della staffetta. Definizione dell'agente in
 `.opencode/agent/cronista.md`; sequenza operativa nella skill `staffetta-lim-gra-nux`.
 
+**A fine giro**, dopo il versionamento automatico (`./versiona.sh`), il Cronista esegue anche
+il **sync di chiusura** senza chiedere conferma: **git** (commit con messaggio
+`QA <task>: <sintesi>; ver NNNN`, tag annotato `ver-NNNN`, push su `origin main --tags`) e
+**Docker Hub** (`marshfellow/assisted-labs:latest` + `:NNNN`). Solo `add/commit/tag/push` e
+`docker tag/push` — mai forza-push, mai modifica degli snapshot locali (procedura in
+`.opencode/agent/cronista.md`, sezione "Sync di chiusura").
+
 L'**Auditor** (subagent in `.opencode/agent/auditor.md`, skill `audit-staffetta`) chiude il
 giro: a staffetta conclusa raccoglie i report degli agenti, estrae i segnali di comportamento
 (aderenza alle skill di riferimento, errori procedurali, qualità dei report) e **propone**
@@ -157,6 +164,7 @@ cd ~/assisted-labs && make build
 - Verificare che `latest` sia sempre l'ultima versione con `docker images alpine-latest-assisted-labs`
 - Non modificare gli archivi in `~/Assisted-Labs-Versioni/` manualmente
 - Usare `--dry-run` per verificare prima di eseguire
+- **Sync di chiusura automatico (Cronista)**: a fine giro, dopo il versionamento locale, il Cronista committa la repo git con tag `ver-NNNN` e push (`origin main --tags`) e aggiorna Docker Hub (`marshfellow/assisted-labs:latest` + `:NNNN`). Nessuna conferma richiesta. Procedura completa in `.opencode/agent/cronista.md`.
 
 ### Anti-cheat per i test (Lim)
 `lab check` valida lo **stato finale** dei file, non il processo: consultando
