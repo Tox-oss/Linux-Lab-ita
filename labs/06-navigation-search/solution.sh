@@ -6,7 +6,6 @@ pwd > current_path.txt
 ls -1 > root_listing.txt
 find evidence -type f -name 'incident-*.txt' | sort > incident_files.txt
 tail -n 4 logs/app.log > last_events.txt
-less docs/runbook.txt >/dev/null
 printf 'sre-oncall\n' > owner.txt
 
 lab check 06-navigation-search

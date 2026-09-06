@@ -1,4 +1,4 @@
-# Assisted Linux Labs — immagine da Alpine Linux (musl), tag stabile pinnato.
+# Assisted Linux Labs — immagine da Alpine Linux (musl); tag 3.24 (minor series) pinnato.
 # L'obiettivo e' un'immagine piu' piccola e veloce di Ubuntu, mantenendo la
 # stessa esperienza: CLI, 9 lab, man page localizzate.
 

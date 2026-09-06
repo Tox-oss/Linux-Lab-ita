@@ -23,7 +23,11 @@ else
   TRAINING_ROOT="/workspace/training"
 fi
 export LAB_TRAINING_ROOT="$TRAINING_ROOT"
-VERSION="2.2"
+# Versione del CLI (bin/lab). NON coincide con il numero degli archivi
+# `ver NNNN` in ~/Assisted-Labs-Versioni (quelli li gestisce versiona.sh):
+# questa e la versione del tool `lab`, incrementata a mano quando il CLI
+# subisce modifiche sostanziali (finding #6).
+VERSION="2.3"
 
 # ---------------------------------------------------------------------------
 # output helpers
@@ -704,11 +708,12 @@ congrats_all_done() {
 
 hardcade_refuse() {
   hr
-  printf ' ??? ??? ??? ??? ??? ??? ??? ??? ??? ???\n'
+  printf '%s\n' '========================================'
   printf '  La modalita HARDCADE e una sfida segreta.\n'
   printf '  Si rivela solo a chi completa TUTTI i lab in modalita\n'
   printf '  ARCADE senza mai perdere un cuore (run perfetta).\n'
-  printf ' ??? ??? ??? ??? ??? ??? ??? ??? ??? ???\n\n'
+  printf '%s\n' '========================================'
+  printf '\n'
   printf 'Hai gia sbloccato? Controlla:  lab status   e   lab mode\n\n'
   exit 2
 }
@@ -1047,7 +1052,7 @@ cmd_check() {
   fi
   
   if is_arcade; then
-    local current_lives
+    local current_lives timer_penalty_applied=0
     current_lives=$(get_lives "$LAB_ID")
     if [ "$current_lives" -le 0 ]; then
       warn "Hai esaurito tutte le vite per il lab $LAB_ID."
@@ -1057,14 +1062,21 @@ cmd_check() {
       exit 1
     fi
     # Timer: se scaduto, -1 vita rossa (i file NON vengono cancellati).
+    # Il marcatore timer-start viene CONSUMATO alla prima penalita: ogni lab check
+    # successivo alla scadenza non deve togliere un'altra vita (finding #2).
+    # Se la penalita timer e gia stata applicata in questa chiamata, un eventuale
+    # fallimento del check NON somma un'ulteriore perdita di vita (alternativi, non cumulativi).
     local t_rem
     t_rem=$(arcade_timer_remaining "$LAB_ID")
     if [ "$t_rem" -eq 0 ] && [ -f "$STATE_DIR/timer-start-$LAB_ID" ]; then
       warn "TEMPO SCADUTO per $LAB_ID — hai perso 1 vita!"
       set_lives "$LAB_ID" $((current_lives - 1))
       current_lives=$((current_lives - 1))
+      timer_penalty_applied=1
       set_arcade_perfect 0
       set_arcade_streak 0
+      # Penalita applicata: consuma il timer cosi non toglie vite ai check successivi.
+      rm -f "$STATE_DIR/timer-start-$LAB_ID"
       if [ "$current_lives" -le 0 ]; then
         printf 'Vite rimaste: %s\n\n' "$(render_lives 0)"
         printf 'Hai esaurito le vite per tempo scaduto: i file restano, rilancia:\n'
@@ -1140,14 +1152,26 @@ cmd_check() {
       exit "$status"
     fi
     if is_arcade; then
-      local remaining=$((current_lives - 1))
+      # Se in questa chiamata il timer era gia scaduto (penalita applicata sopra),
+      # il fallimento del check NON toglie un'altra vita: sono alternative, non
+      # cumulabili nella stessa invocazione (finding #2).
+      local remaining
+      if [ "$timer_penalty_applied" -eq 0 ]; then
+        remaining=$((current_lives - 1))
+      else
+        remaining="$current_lives"
+      fi
       set_lives "$LAB_ID" "$remaining"
       set_arcade_perfect 0   # una vita persa: niente run perfetta -> hardcade resta bloccato
       set_arcade_streak 0    # un check fallito spezza la streak di lab puliti
       ensure_state
       echo 1 > "$NORMAL_STATE_DIR/fail-$LAB_ID"
       if [ "$remaining" -gt 0 ]; then
-        warn "check FALLITO — hai perso 1 vita!"
+        if [ "$timer_penalty_applied" -eq 1 ]; then
+          warn "check FALLITO (vita gia persa per tempo scaduto)"
+        else
+          warn "check FALLITO — hai perso 1 vita!"
+        fi
         printf 'Vite rimaste: %s\n\n' "$(render_lives "$remaining")"
         printf 'I tuoi file NON sono stati cancellati. Correggi l errore e riprova:\n'
         printf '  lab hint  %s      # indizio (progressivo)\n' "$LAB_ID"
@@ -1277,6 +1301,14 @@ cmd_hint() {
     return 0
   fi
   local help_shown=0
+
+  # HARDCADE: il prezzo (1 dei 3 errori condivisi per l'intera sessione) e alto:
+  # una volta pagato, la cascata completa degli indizi viene mostrata subito,
+  # non solo il primo livello concettuale (finding #4). Coerente con cmd_solution
+  # che in HARDCADE mostra gia tutta la soluzione.
+  if is_hardcade; then
+    mode="all"
+  fi
 
   if [ "$mode" = "all" ]; then
     # In ARCADE il "all" e sconsigliato: consumerebbe solo concetto ma conta 1 lampadina.

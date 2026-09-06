@@ -36,7 +36,8 @@ salva in `contexto/<task>.md` il contesto compresso in punti chiave (obiettivo, 
 correzioni, prossimi passi). File:
 - `contexto/<task>.md` (es. `contexto/lab-03-users-groups.md`, `contexto/giro-completo.md`)
 - Usato per riprendere il lavoro senza rileggere i report completi.
-- Cronista è definito come subagent in `.opencode/agent/cronista.md` e **si attiva
+- Cronista è definito come subagent in `.opencode/agent/cronista.md` (copie di riferimento
+  attive nel progetto, in `~/assisted-labs/.opencode/agent/`) e **si attiva
   automaticamente** a fine fase Lim, a fine fase Graph e a fine correzione Nux (vedi staffetta).
 
 ### Nota transitorietà (lab 03/04/08/09)
@@ -73,6 +74,15 @@ miglioramenti alle skill `lim-qa`/`graph-qa`/`nux-fix`. Le proposte non vengono 
 automaticamente: decide l'utente. Il report `reports/<task>-audit-report.md` è **effimero**:
 viene eliminato all'avvio del giro successivo.
 
+### Nota percorsi agenti (finding staffetta esterna #7)
+Le definizioni attive dei subagent della staffetta (cronista, auditor) vivono in
+`~/assisted-labs/.opencode/agent/` (cartella di progetto, riferita in questo file come
+`.opencode/agent/`). Esiste anche una copia storica/complementare in `~/.opencode/agents/`
+(usata dal PDF `andamento agenti lab.pdf` e da `audit-staffetta/SKILL.md` per lim/graph/nux):
+i file possono differire (es. ritenzione versioni). **La fonte autorevole è quella di
+progetto** `.opencode/agent/`; prima di usare `~/.opencode/agents/...` confrontare con la
+versione di progetto.
+
 ## Indice Skill
 
 Le skill vivono in `.opencode/skills/<nome>/SKILL.md`. Ogni agente le carica con il tool `skill` **prima di iniziare il task**:
@@ -103,7 +113,7 @@ Questo script:
 - **Cartella live**: `ver latest/` è lo stato corrente non numerato (aggiornata a ogni versione).
 - **Docker tag**: `alpine-latest-assisted-labs:0001`, `:0002`, ...
 - **Latest**: `alpine-latest-assisted-labs:latest` = sempre l'ultima versione
-- **Ritenzione**: a fine giro la cronologia viene limitata a `ver latest` + le 4 versioni numerate più recenti (5 voci totali); le eccedenti (archivi e cartelle legacy `ver NNNN - ...`) vengono eliminate dal **Cronista** al salvataggio, previo elenco all'utente. I tag Docker storici non vengono rimossi e `Buon Divertimento/` non viene mai toccato.
+- **Ritenzione**: a fine giro la cronologia viene limitata a `ver latest` + le 4 versioni numerate più recenti (5 voci totali); le eccedenti (archivi e cartelle legacy `ver NNNN - ...`) vengono eliminate automaticamente dal **Cronista** al salvataggio. I tag Docker storici non vengono rimossi e `Buon Divertimento/` non viene mai toccato.
 
 ### Sovrascrittura della versione più recente
 Per aggiornare lo snapshot della versione numerata con numero più alto (senza crearne una nuova):
@@ -143,7 +153,7 @@ cd ~/assisted-labs && make build
 | `make test` | Testa tutti i 9 lab |
 
 ## Regole per agenti
-- Dopo aver completato modifiche al codice, eseguire sempre `./versiona.sh` (in staffetta: a fine giro, previa conferma dell'utente "nuovo documento o sovrascrivi il più recente?")
+- Dopo aver completato modifiche al codice, eseguire sempre `./versiona.sh` (in staffetta: a fine giro salvare **automaticamente come nuovo documento** con `./versiona.sh`; `--overwrite` solo su esplicita richiesta dell'utente)
 - Verificare che `latest` sia sempre l'ultima versione con `docker images alpine-latest-assisted-labs`
 - Non modificare gli archivi in `~/Assisted-Labs-Versioni/` manualmente
 - Usare `--dry-run` per verificare prima di eseguire
@@ -159,3 +169,12 @@ positivi**. Per questo:
   (`🔎 Tracciabilità: ... Solution consultata: Sì/No`).
 - Cosa fa Lim quando si blocca: rilegge le istruzioni, riprova, e se non riesce
   → **finding di qualità del corso** (non una validazione dalla soluzione).
+
+### Punto cieco non interattivo (Lim)
+Lim testa in condizioni interattive (TTY reale, coerente con `-it`): questo può
+mascherare bug che si manifestano solo in invocazione non interattiva (pipe,
+subprocess, CI) — es. comandi come `less` in `solution.sh` che funzionano a
+terminale ma falliscono o si comportano diversamente senza TTY. Per coprire
+questo punto cieco, **ogni giro di Lim deve includere almeno un'esecuzione
+non interattiva di `LAB_QA_MODE=1 bash tests/run-tests.sh`**, il cui esito va
+riportato nel Report Qualità insieme ai risultati del test interattivo.
