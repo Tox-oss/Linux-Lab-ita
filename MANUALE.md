@@ -64,17 +64,19 @@ Dentro il container hai due tipi di "memoria": una **resiste**, l'altra **no**.
 ## Dentro il container
 
 ```text
-lab                 aiuto
+lab                 aiuto (lab help / lab --help)
 lab list            elenco esercizi
 lab start <id>      reset + consegna
 lab task  <id>      rivedi consegna (no reset)
 lab check <id>      valida  — NON cancella i tuoi file
 lab hint  <id>      indizio uno alla volta
+lab -h [<id>]       forma breve di hint; senza id usa il lab corrente
 lab hint  <id> --all
+lab class <id>      lezione narrata interattiva sugli argomenti
 lab solution <id>   soluzione di riferimento
 lab reset <id>      azzera SOLO quel lab
 lab status          avanzamento
-lab mode <nome>     cambi/vedi modalita (standard/arcade/hardcade)
+lab mode <nome>     cambi/vedi modalita (standard/arcade/hardcade; -s/-a/-hc)
 lab anim <nome>     anteprima animazioni (fireworks, rain, all)
 lab doctor          diagnosi
 lab quit            chiudi la sessione
@@ -83,6 +85,34 @@ lab quit            chiudi la sessione
 > Questi comandi valgono per la **modalità apprendimento (standard)**,
 > quella usata durante tutto il corso. Le modalità **arcade** e **hardcade**
 > sono un **gioco/easter egg a parte** — vedi sotto "Modalità gioco".
+
+## Lezione narrata: `lab class <id>`
+
+Prima di lanciarti sui comandi puoi seguire una **lezione narrata** per ogni lab:
+`lab class 01-filesystem` (l'id completo, es. `01-filesystem`, non il numero).
+
+Come funziona:
+
+- Il testo scorre con l'effetto battitura (velocità dedicata, default **0.03**
+  s/car). In qualsiasi momento **INVIO** salta subito alla frase successiva:
+  non devi aspettare la fine.
+- Dopo ogni argomento la lezione chiede **«Ci sono dubbi?»** e proponi il menu:
+  - **`[0]`** → continui con l'argomento successivo (la lezione **non è imposta**);
+  - **`[N]`** → apro la versione **riassuntiva** dell'argomento scelto;
+  - al termine: «COMPLIMENTI!» e il suggerimento di provare `lab start <id>`.
+- Se il menu è troppo largo (lab con molti argomenti) le opzioni vengono
+  stampate **in colonna** invece che su una riga, per restare leggibili anche
+  su terminale 80-col.
+
+Colori: titolo/header **cyan**, domanda «Ci sono dubbi?» **gialla** con
+argomento corrente del menu **verde**, riassunto **magenta** — coerenti con le
+regole colori del corso (magenta = comandi da digitare, verde = "ok/prosegui",
+giallo = domanda/output, ciano = titoli).
+
+Il contenuto delle lezioni vive in `labs/<id>/class.txt`, formato
+`ARGOMENTO:` / `NARRAZIONE:` / `RIASSUNTO:` (i nomi non contengono virgole; testo
+di `NARRAZIONE` e `RIASSUNTO` può proseguire su più righe, il parser lo
+ricompone in una frase unica).
 
 ## Flusso di studio
 

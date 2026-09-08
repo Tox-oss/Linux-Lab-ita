@@ -1,0 +1,7 @@
+ARGOMENTO: chmod
+NARRAZIONE: Il comando chmod cambia i permessi di un file o directory. Ogni file ha tre livelli di permessi: lettura (r), scrittura (w) ed esecuzione (e). Questi permessi si applicano a tre categorie: il proprietario (owner), il gruppo (group) e gli altri (other). Puoi usare la notazione numerica (es. 644) o quella simbolica (es. u+x). Il numero e' una somma: r=4, w=2, x=1. Quindi 7 = rwx, 6 = rw-, 4 = r--.
+RIASSUNTO: chmod [modo] file — cambia permessi. Numerico: r=4, w=2, x=1. Simbolico: u+/-, g+/-, o+/-.
+
+ARGOMENTO: ls -l
+NARRAZIONE: Il comando ls con il flag -l mostra i dettagli di ogni file: permessi, proprietario, gruppo, dimensione, data di modifica. La prima colonna della riga e' proprio la stringa di permessi (es. -rwxr-xr-x). Imparare a leggere ls -l e' fondamentale per capire cosa può fare un file e chi puo' accedervi.
+RIASSUNTO: ls -l — mostra dettagli file incluso il primo campo (permessi).

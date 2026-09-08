@@ -129,9 +129,11 @@ docker run --rm -it --name assisted-labs -v Alpine_Latest:/workspace alpine-late
 - `lab list` : Elenco di tutti i laboratori
 - `lab start <id>` : Avvia un esercizio (es. `lab start 01-filesystem`)
 - `lab check <id>` : Verifica la soluzione svolta
-- `lab hint <id>` : Suggerimenti progressivi
+- `lab hint <id>` : Suggerimenti progressivi (`lab -h` = forma breve)
+- `lab class <id>` : Lezione narrata interattiva sugli argomenti
 - `lab solution <id>` : Mostra la soluzione
 - `lab status` : Mostra lo stato di avanzamento
+- `lab mode <nome>` : Cambia modalità (`-s`, `-a`, `-hc`)
 - `lab quit` : Esci dal laboratorio
 
 ---

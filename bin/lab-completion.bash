@@ -22,9 +22,9 @@ _lab_complete() {
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-  local subcmds="list start task check hint solution reset status mode doctor quit help readme anim"
+  local subcmds="list start task check hint solution reset status mode doctor quit help readme anim class -h --hint --help"
   # sottocomandi che prendono un lab-id come secondo argomento
-  local id_cmds="start task check hint solution reset status anim"
+  local id_cmds="start task check hint solution reset status anim class -h --hint"
 
   # primo argomento: i sottocomandi
   if [ "$COMP_CWORD" -eq 1 ]; then
@@ -35,6 +35,12 @@ _lab_complete() {
   # id lab (o alias numerico) per i sottocomandi che ne richiedono uno
   if [[ " $id_cmds " == *" ${COMP_WORDS[1]} "* ]] && [ "$COMP_CWORD" -eq 2 ]; then
     _lab_ids_and_nums "$cur"
+    return
+  fi
+
+  # secondo argomento di `lab mode`: le modalita (+ forme brevi)
+  if [ "${COMP_WORDS[1]}" = "mode" ] && [ "$COMP_CWORD" -eq 2 ]; then
+    COMPREPLY=( $(compgen -W "standard arcade hardcade std -a -s -hc" -- "$cur") )
     return
   fi
 }

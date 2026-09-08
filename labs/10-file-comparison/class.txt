@@ -1,0 +1,11 @@
+ARGOMENTO: diff
+NARRAZIONE: Il comando diff confronta due file riga per riga e mostra le differenze. Le righe con - sono quelle rimosse, le righe con + sono quelle aggiunte. diff -u mostra il formato "unified" (lo stesso usato da git diff). diff -r confronta ricorsivamente due directory. E' lo strumento fondamentale per capire cosa e' cambiato tra due versioni di un file.
+RIASSUNTO: diff [-u|-r] file1 file2 — mostra differenze. -u unified, -r ricorsivo.
+
+ARGOMENTO: cmp
+NARRAZIONE: Il comando cmp confronta due file byte per byte. A differenza di diff, non mostra le differenze: dice solo se i file sono identici o dove si trovano le prime differenze. E' piu' veloce di diff quando vuoi solo sapere "sono uguali?" senza curarti di cosa e' cambiato.
+RIASSUNTO: cmp file1 file2 — confronto byte per byte. Dice SE sono diversi e DOVE.
+
+ARGOMENTO: comm
+NARRAZIONE: Il comando comm confronta due file ordinati e divide le righe in tre colonne: solo nel primo file, solo nel secondo file, in entrambi. E' utile per trovare elementi comuni o diversi tra due liste. Entrambi i file devono essere ordinati (usa sort prima se non lo sono).
+RIASSUNTO: comm file1 file2 — confronta liste ordinate. 3 colonne: solo1, solo2, entrambi.

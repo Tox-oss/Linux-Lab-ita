@@ -1,0 +1,19 @@
+ARGOMENTO: cd e pwd
+NARRAZIONE: Il comando cd (change directory) ti sposta in un'altra parte del filesystem. E' come camminare in una stanza diversa: il tuo punto di vista cambia. pwd (print working directory) ti dice dove sei adesso. Senza argomenti, cd torna nella home directory. Con cd .. sali di un livello nella gerarchia.
+RIASSUNTO: cd percorso — cambia directory. pwd — mostra dove sei. cd .. = su.
+
+ARGOMENTO: ls
+NARRAZIONE: Il comando ls mostra il contenuto della directory corrente. Con -l vedi i dettagli (permessi, dimensione, data), con -a vedi anche i file nascosti (quelli che iniziano con .), con -h le dimensioni sono in formato leggibile (K, M, G). E' il primo comando che usi quando arrivi in un posto nuovo.
+RIASSUNTO: ls [-l|-a|-h] — elenca contenuto. -l dettagli, -a nascosti, -h leggibile.
+
+ARGOMENTO: find
+NARRAZIONE: Il comando find cerca file e directory in base a nome, tipo, dimensione o altri criteri. E' come un detective del filesystem: puoi cercare tutti i .txt, tutti i file piu' grandi di 1MB, tutti i file modificati oggi. Funziona in modo ricorsivo: controlla tutta la gerarchia sotto il percorso indicato.
+RIASSUNTO: find percorso -name "*.est" -type f — cerca ricorsivamente per nome/tipo.
+
+ARGOMENTO: less
+NARRAZIONE: Il comando less mostra il contenuto di un file una schermata alla volta. E' piu' comodo di cat quando il file e' lungo: puoi scorrere con le frecce, cercare con /testo, uscire con q. Non modifica il file, lo mostra in sola lettura.
+RIASSUNTO: less file — mostra contenuto pagina alla volta. /cerca, q esci.
+
+ARGOMENTO: tail
+NARRAZIONE: Il comando tail mostra le ultime righe di un file. Di default le ultime 10 righe. Con -n 20 vedi le ultime 20. Con -f (follow) il file segue le nuove righe in tempo reale: utile per monitorare file di log mentre vengono scritti. Premi Ctrl+C per uscire da -f.
+RIASSUNTO: tail [-n N|-f] file — ultime N righe. -f = segue in tempo reale.

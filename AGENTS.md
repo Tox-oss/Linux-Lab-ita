@@ -67,12 +67,10 @@ aggiornare il contesto compresso in `contexto/` prima di passare alla fase succe
 permanenza e coerenza tra le sessioni separate della staffetta. Definizione dell'agente in
 `.opencode/agent/cronista.md`; sequenza operativa nella skill `staffetta-lim-gra-nux`.
 
-**A fine giro**, dopo il versionamento automatico (`./versiona.sh`), il Cronista esegue anche
-il **sync di chiusura** senza chiedere conferma: **git** (commit con messaggio
+**A fine giro**, dopo il versionamento automatico (`./versiona.sh`), il Cronista prepara il **sync di chiusura** su richiesta esplicita dell'utente: **git** (commit con messaggio
 `QA <task>: <sintesi>; ver NNNN`, tag annotato `ver-NNNN`, push su `origin main --tags`) e
 **Docker Hub** (`marshfellow/assisted-labs:latest` + `:NNNN`). Solo `add/commit/tag/push` e
-`docker tag/push` — mai forza-push, mai modifica degli snapshot locali (procedura in
-`.opencode/agent/cronista.md`, sezione "Sync di chiusura").
+`docker tag/push`, eseguiti **solo con la conferma dell'utente** — mai forza-push, mai modifica degli snapshot locali (procedura in `.opencode/agent/cronista.md`, sezione "Sync di chiusura").
 
 L'**Auditor** (subagent in `.opencode/agent/auditor.md`, skill `audit-staffetta`) chiude il
 giro: a staffetta conclusa raccoglie i report degli agenti, estrae i segnali di comportamento
@@ -167,19 +165,32 @@ cd ~/assisted-labs && make build
 - Verificare che `latest` sia sempre l'ultima versione con `docker images alpine-latest-assisted-labs`
 - Non modificare gli archivi in `~/Assisted-Labs-Versioni/` manualmente
 - Usare `--dry-run` per verificare prima di eseguire
-- **Sync di chiusura automatico (Cronista)**: a fine giro, dopo il versionamento locale, il Cronista committa la repo git con tag `ver-NNNN` e push (`origin main --tags`) e aggiorna Docker Hub (`marshfellow/assisted-labs:latest` + `:NNNN`). Nessuna conferma richiesta. Procedura completa in `.opencode/agent/cronista.md`.
+- **Sync di chiusura (Cronista, su richiesta utente)**: a fine giro, dopo il versionamento locale, il Cronista prepara il riepilogo della repo git (commit con tag `ver-NNNN` e push `origin main --tags`) e di Docker Hub (`marshfellow/assisted-labs:latest` + `:NNNN`). Commit/tag/push git e push Docker Hub vengono eseguiti **solo su esplicita richiesta dell'utente**, mai automatici. Procedura completa in `.opencode/agent/cronista.md`.
 
 ### Anti-cheat per i test (Lim)
 `lab check` valida lo **stato finale** dei file, non il processo: consultando
-`lab solution` (o `bash labs/<id>/solution.sh`) un test produrrebbe **falsi
-positivi**. Per questo:
+`lab solution` (o `bash labs/<id>/solution.sh`) **durante** un test produrrebbe
+**falsi positivi**. Per questo:
 - Il CLI accetta `LAB_QA_MODE=1`: in questa modalità `lab solution` è **bloccato**
   (messaggio + `return 1`, nessuna soluzione mostrata).
-- **Lim DEVE** anteporre `LAB_QA_MODE=1` a ogni `lab ...` e non leggere/eseguire
-  mai `solution.sh` durante un lab. La tracciabilità è obbligatoria nel report
-  (`🔎 Tracciabilità: ... Solution consultata: Sì/No`).
+- **Lim DEVE** anteporre `LAB_QA_MODE=1` a ogni `lab ...` durante il test e non
+  leggere/eseguire mai `solution.sh` in quella fase. La tracciabilità è
+  obbligatoria nel report (`🔎 Tracciabilità: ... Solution consultata: ...`).
 - Cosa fa Lim quando si blocca: rilegge le istruzioni, riprova, e se non riesce
   → **finding di qualità del corso** (non una validazione dalla soluzione).
+
+### Verifica post-test (Lim)
+A **test completo** (interattivo `LAB_QA_MODE=1` + suite non interattiva
+`LAB_QA_MODE=1 bash tests/run-tests.sh`), Lim può consultare la soluzione come
+**ultimo passo** per confrontare lo stato finale atteso, con `LAB_QA_MODE`
+spento:
+```bash
+LAB_QA_MODE=0 lab solution <id> | cat
+```
+- La soluzione post-test **non è mai un oracolo dei check**: i finding restano
+  quelli del test reale.
+- Va dichiarata nella tracciabilità del report: `Solution consultata: Sì (solo
+  post-test, dopo tutti i check)`.
 
 ### Punto cieco non interattivo (Lim)
 Lim testa in condizioni interattive (TTY reale, coerente con `-it`): questo può

@@ -1,0 +1,23 @@
+ARGOMENTO: top
+NARRAZIONE: Il comando top mostra i processi in tempo reale, ordinati per consumo di risorse. E' come un tableau de bord del sistema: vedi CPU, memoria, quanti processi girano, chi sta usando piu' risorse. Con top -b -n1 ottieni uno snapshot singolo, utile per salvare l'output in un file.
+RIASSUNTO: top — processi in tempo reale. top -b -n1 = snapshot singolo (non interattivo).
+
+ARGOMENTO: free
+NARRAZIONE: Il comando free mostra la quantita' di memoria RAM e swap disponibile. free -h mostra i valori in formato leggibile. Le colonne principali sono: totale, usata, libera, buff/cache. La memoria "buff/cache" e' quella usata dal sistema per ottimizzare le letture: non e' realmente occupata e puo' essere liberata se serve.
+RIASSUNTO: free [-h] — stato memoria RAM e swap. -h = leggibile.
+
+ARGOMENTO: openrc
+NARRAZIONE: OpenRC e' il sistema di init su Alpine Linux: gestisce l'avvio e l'arresto dei servizi. Il comando rc-status mostra lo stato dei servizi, rc-service nome start avvia un servizio, rc-service nome stop lo ferma. E' il primo livello di amministrazione: capire cosa gira e quando.
+RIASSUNTO: rc-status — stato servizi. rc-service nome start|stop|restart — gestisci servizio.
+
+ARGOMENTO: logger
+NARRAZIONE: Il comando logger scrive messaggi nei log di sistema (/var/log/messages o syslog). Utile per tracciare cosa e' successo: "ho installato questo pacchetto", "ho cambiato questa configurazione". I log sono la memoria del sistema: quando qualcosa va storto, sono loro che ti dicono cosa e' successo.
+RIASSUNTO: logger "messaggio" — scrive nel log di sistema.
+
+ARGOMENTO: sudo
+NARRAZIONE: Il comando sudo esegue un singolo comando con privilegi di root, senza fare login come root. E' come avere un permesso speciale per un'operazione specifica: chiedi, ottieni, esegui, torni normale. Dopo aver digitato sudo, ti viene chiesta la password del tuo utente (non di root).
+RIASSUNTO: sudo comando — esegui come root. Ti chiede la password del tuo utente.
+
+ARGOMENTO: crontab
+NARRAZIONE: Il comando crontab gestisce le attivita' pianificate (cron job). E' come un promemoria automatico: puoi dire al sistema di eseguire un comando ogni giorno alle 3 di notte, ogni lunedi' alle 9, o ogni 5 minuti. crontab -e apre l'editor, crontab -l mostra i job attivi. Il formato e': minuto ora giorno mese giorno-settimana comando.
+RIASSUNTO: crontab -e — edita job. crontab -l — elenca. Formato: MINORA GIORNO MESE GIORNO-SETTIMANA COMANDO.

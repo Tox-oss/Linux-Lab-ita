@@ -1,0 +1,15 @@
+ARGOMENTO: grep
+NARRAZIONE: Il comando grep cerca testo all'interno di file o di un flusso di dati. E' come un evidenziatore intelligente: gli dici cosa cercare e ti mostra solo le righe che contengono quel testo. Con -i ignora maiuscole/minuscole, con -c conta quante righe matchano, con -v mostra le righe che NON matchano.
+RIASSUNTO: grep [-i|-c|-v] "testo" file — cerca e filtra righe.
+
+ARGOMENTO: sort
+NARRAZIONE: Il comando sort ordina le righe di un file o di un flusso di testo. Per default ordina alfabeticamente. Con -n ordina numericamente, con -r inverte l'ordine, con -u elimina le righe duplicate. Spesso si usa dopo grep o other filtri per dare ordine al risultato.
+RIASSUNTO: sort [-n|-r|-u] — ordina righe. -n numerico, -r inverso, -u unici.
+
+ARGOMENTO: uniq
+NARRAZIONE: Il comando uniq elimina le righe duplicate consecutive. Attenzione: funziona solo se le righe duplicate sono una dopo l'altra. Per questo si usa spesso dopo sort -u o sort | uniq. Con -c conta quante volte compare ogni riga, con -d mostra solo le duplicate.
+RIASSUNTO: uniq [-c|-d] — elimina duplicate consecutive. -c conta, -d mostra solo dup.
+
+ARGOMENTO: awk
+NARRAZIONE: awk e' un linguaggio di elaborazione del testo. Analizza ogni riga, la divide in campi (separati da spazio per default) e puoi fare calcoli, filtri e trasformazioni. E' come Excel nel terminale: puoi sommare colonne, filtrare per indice, riformattare l'output. Semplice nella sintassi base, potentissimo nelle mani giuste.
+RIASSUNTO: awk '{print $1, $3}' — stampa primo e terzo campo. FNR, NF, pattern per filtrare.

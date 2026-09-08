@@ -1,0 +1,15 @@
+ARGOMENTO: mkdir
+NARRAZIONE: Il comando mkdir crea una directory. Se la cartella del percorso non esiste ancora, mkdir fallisce... a meno che tu non usi il flag -p. Con mkdir -p, l'intero percorso viene creato in un colpo solo: genitori e figli, senza errori. E' come costruire una scala: se manca un gradino, il -p lo costruisce per te.
+RIASSUNTO: mkdir [-p] percorso — crea directory. -p crea i genitori mancanti.
+
+ARGOMENTO: mv
+NARRAZIONE: Il comando mv (move) sposta o rinomina un file o una directory. E' come spostare un foglio da una cartella all'altra: il contenuto non cambia, cambia solo dove si trova. Se la destinazione e' una directory, il file finisce dentro. Se e' un percorso con un nome diverso, il file viene rinominato.
+RIASSUNTO: mv origine destinazione — sposta o rinomina file/cartelle.
+
+ARGOMENTO: cp
+NARRAZIONE: Il comando cp (copy) crea una copia identica di un file o directory. A differenza di mv, l'originale resta dov'era. Con il flag -r copi anche le directory e tutto il loro contenuto. Utile per fare backup prima di un'operazione rischiosa.
+RIASSUNTO: cp [-r] origine destinazione — copia file (-r per directory).
+
+ARGOMENTO: rm
+NARRAZIONE: Il comando rm (remove) cancella file e directory. Attenzione: non esiste un cestino. Un file cancellato con rm e' perso per sempre. Con -r cancelli una directory e tutto il suo contenuto. Prima di premere Invio, leggi bene il comando. Il tempo di pensarci c'e' sempre.
+RIASSUNTO: rm [-r] file — cancella file o directory. Irreversibile.

@@ -1,0 +1,11 @@
+ARGOMENTO: background (&)
+NARRAZIONE: Il simbolo & alla fine di un comando lo avvia in background: il processo lavora in parallelo e la shell ti ritorna subito il prompt. Il processo continua a girare "delloetro le quinte". Per mandare in background un processo gia' avviato, puoi usare Ctrl+Z e poi il comando bg.
+RIASSUNTO: comando & — avvia in background. Ctrl+Z poi bg = sposta in background.
+
+ARGOMENTO: PID
+NARRAZIONE: Ogni processo ha un PID (Process IDentifier), un numero univoco che lo identifica. Il PID del processo appena lanciato in background lo trovi in $!. Con ps puoi vedere tutti i processi in esecuzione e i loro PID. Il PID 1 e' sempre init: il padre di tutti i processi del sistema.
+RIASSUNTO: $! = PID ultimo background. ps = elenco processi con PID.
+
+ARGOMENTO: ps
+NARRAZIONE: Il comando ps mostra i processi attivi. ps aux mostra tutti i processi di tutti gli utenti con dettagli: CPU, memoria, stato, comando. E' come un fotogramma di cosa sta facendo il sistema in quel momento. Utile per trovare processi che consumano troppe risorse.
+RIASSUNTO: ps aux — elenco completo processi (utente, stato, risorse, comando).

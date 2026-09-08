@@ -1,0 +1,15 @@
+ARGOMENTO: useradd
+NARRAZIONE: Il comando useradd crea un nuovo utente nel sistema. Con il flag -m crea anche la home directory, e con -s si imposta la shell di default. Ogni utente ha un UID (numero univoco) e un gruppo primario. Dopo la creazione, puoi assegnare una password con passwd.
+RIASSUNTO: useradd -m -s /bin/bash nome — crea utente con home e shell.
+
+ARGOMENTO: groupadd
+NARRAZIONE: Il comando groupadd crea un nuovo gruppo. I gruppi servono per gestire i permessi in modo collettivo: invece di dare permessi a ogni utente singolarmente, li dai al gruppo e tutti i membri li ereditano. Un utente puo' appartenere a piu' gruppi.
+RIASSUNTO: groupadd nome — crea un nuovo gruppo.
+
+ARGOMENTO: chown
+NARRAZIONE: Il comando chown (change owner) cambia il proprietario e/o il gruppo di un file o directory. Con la sintassi user:group cambi entrambi in un colpo solo. Utile quando un file creato da root deve essere gestito da un altro utente. Con -r si applica ricorsivamente a directory e contenuto.
+RIASSUNTO: chown [-r] utente[:gruppo] file — cambia proprietario/gruppo.
+
+ARGOMENTO: id
+NARRAZIONE: Il comando id mostra le informazioni dell'utente corrente: UID, GID e gruppi di appartenenza. E' il primo comando da eseguire per capire "chi sei" nel sistema. Anche se hai fatto login come un utente, potresti avere privilegi diversi a seconda dei gruppi a cui appartieni.
+RIASSUNTO: id — mostra UID, GID e gruppi dell'utente corrente.

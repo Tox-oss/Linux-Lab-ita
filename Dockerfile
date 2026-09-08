@@ -1,6 +1,6 @@
 # Assisted Linux Labs — immagine da Alpine Linux (musl); tag 3.24 (minor series) pinnato.
 # L'obiettivo e' un'immagine piu' piccola e veloce di Ubuntu, mantenendo la
-# stessa esperienza: CLI, 9 lab, man page localizzate.
+# stessa esperienza: CLI, 10 lab, man page localizzate.
 
 # ---- Stadio "mans": estrae le man page EN + IT ----
 # Su Alpine il pacchetto man-pages contiene solo ~18 pagine e manpages-it non
@@ -76,7 +76,6 @@ COPY bin/lab /opt/assisted-labs/bin/lab
 COPY bin/intro.sh /opt/assisted-labs/bin/intro.sh
 COPY lib/ /opt/assisted-labs/lib/
 COPY labs/ /opt/assisted-labs/labs/
-COPY contexto/ /opt/assisted-labs/contexto/
 COPY tests/ /opt/assisted-labs/tests/
 COPY README.md /opt/assisted-labs/README.md
 

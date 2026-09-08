@@ -31,16 +31,47 @@ INTRO_NAME_FILE="${TRAINING}/.intro-name"
 [ -f "$INTRO_STATE_FILE" ] && exit 0
 
 # --- Utilità --------------------------------------------------------------
-tw() {  # typewriter: stampa lettera per lettera (effetto conversazione)
-  local s="$1" i c
+# Velocita' di battitura (secondi per carattere): narrativa 0.04, comandi 0.04.
+# Overridabili via ambiente per test rapidi (LAB_TYPE_NARR / LAB_TYPE_CMD).
+# Il ritmo "a dettatura" (pause di punteggiatura) e' gestito dentro tw().
+NARR_SPEED="${LAB_TYPE_NARR:-0.04}"
+CMD_SPEED="${LAB_TYPE_CMD:-0.04}"
+
+tw() {  # typewriter "a dettatura": stampa lettera per lettera con pause di punteggiatura
+  local s="$1" speed="${2:-$NARR_SPEED}" i c
+  local ps="${LAB_PAUSE_SENTENCE:-0.4}"  # pausa lunga dopo . ! ?
+  local pc="${LAB_PAUSE_COMMA:-0.15}"    # pausa breve dopo , ; :
+  if [ "${LAB_INSTANT_RENDER:-0}" = "1" ] || [ "$speed" = "0" ] || [ ! -t 1 ]; then
+    printf '%s\n' "$s"
+    return
+  fi
   for (( i=0; i<${#s}; i++ )); do
     printf '%s' "${s:i:1}"
-    sleep 0.015
+    c="${s:i:1}"
+    # Dettatura: respiro dopo la punteggiatura; INVIO salta al resto della riga
+    case "$c" in
+      [.!?!])
+        if IFS= read -r -t "$ps" _ </dev/tty 2>/dev/null; then
+          printf '%s' "${s:i+1}"
+          break
+        fi
+        ;;
+      [,\;:])
+        IFS= read -r -t "$pc" _ </dev/tty 2>/dev/null || true
+        ;;
+    esac
+    # Attesa base (velocita' di battitura); INVIO salta al resto della riga
+    if IFS= read -r -t "$speed" _ </dev/tty 2>/dev/null; then
+      printf '%s' "${s:i+1}"
+      break
+    fi
   done
   printf '\n'
 }
+tw_cmd() { tw "$1" "$CMD_SPEED"; }   # battitura veloce per i comandi
 twnl() { tw "$1"; printf '\n'; }   # battitura + riga vuota
 pause() { sleep "$1"; }
+scene_gap() { pause 3; clear; }   # 3s di lettura, poi schermo pulito
 boxin() {  # box informativo colorato attorno a una domanda
   printf '\033[1;36m%s\033[0m\n' "$1"
 }
@@ -61,9 +92,9 @@ twnl "Quello che stai per capire e' il comando piu' semplice e piu' importante d
 say "Digita pure, senza paura:"
 
 you "whoami"
-twnl "."
-twnl ".."
-twnl "..."
+tw_cmd "."
+tw_cmd ".."
+tw_cmd "..."
 pause 0.3
 CMD_OUT=$(whoami 2>/dev/null || echo "?")
 if [ "$CMD_OUT" != "root" ]; then
@@ -78,6 +109,8 @@ say "Lavorare sempre come root vuol dire poter fare"
 say "qualunque cosa, anche rompere tutto per sbaglio. Ecco perche' qui useremo"
 twnl "un'identita' tutta tua, e sudo solo quando serve davvero."
 
+scene_gap
+
 # --- Scena 2: dove sono -----------------------------------------------------
 boxin "DOVE SEI?"
 twnl "Stai dentro un container Docker: una sandbox isolata e sicura, con dentro"
@@ -87,24 +120,17 @@ OS_NAME=$(awk -F= '/^PRETTY_NAME/{gsub(/"/,"",$2);print $2}' /etc/os-release 2>/
 printf '\033[1;33m%s\033[0m\n' "$OS_NAME"
 twnl "I tuoi esercizi vivono qui accanto a te, isolati dal resto del mondo."
 
+scene_gap
+
 # --- Scena 3: perche' non root / sudo --------------------------------------
 boxin "PERCHE' NON LAVORIAMO COME ROOT?"
 twnl "Perche' qui si impara a *sperimentare*. Un errore da root puo' essere"
 twnl "irreversibile; da utente normale e' un errore da cui si impara."
 twnl "Sara' sempre disponibile 'sudo' per i casi seri, quando serve il potere."
-pause 1
 
-# --- Scena 4: perche' cd viene prima di awk --------------------------------
-boxin "PERCHE' 'cd' VIENE PRIMA DI 'awk'?"
-twnl "Per lavorare su un file devi prima sapere DOVE sei. Orientarti nel"
-twnl "filesystem (cd, ls, pwd, find) viene SEMPRE prima di manipolare o"
-twnl "elaborare il contenuto (grep, sort, awk)."
-twnl "Ecco perche' il corso parte con filesystem e navigazione, e solo dopo"
-twnl "con i comandi di elaborazione del testo. Prima sai dove andare,"
-twnl "poi decidi cosa fare."
-pause 1
+scene_gap
 
-# --- Scena 5: scelta del nome + creazione utente reale ----------------------
+# --- Scena 4: scelta del nome + creazione utente reale ----------------------
 boxin "CHI VUOI ESSERE?"
 say "Adesso crea la tua identita'. Scrivi un nome (solo minuscole, numeri e _):"
 while :; do
@@ -141,6 +167,10 @@ fi
 
 # Salva lo stato PRIMA dello switch: al prossimo avvio l'intro non riparte.
 mkdir -p "$TRAINING"
+# Dai la proprieta' dello spazio di lavoro all'utente: senza questo, la
+# training resta root:root e il nuovo utente non puo' creare .lab-state
+# (lab start/hint falliscono con "Permission denied").
+chown -R "$NOME:$NOME" "$TRAINING" 2>/dev/null || true
 printf '%s' "$NOME" > "$INTRO_NAME_FILE"
 printf 'done' > "$INTRO_STATE_FILE"
 

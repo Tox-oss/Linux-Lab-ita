@@ -1,0 +1,11 @@
+ARGOMENTO: df
+NARRAZIONE: Il comando df (disk free) mostra lo spazio disponibile sui filesystem montati. df -h mostra i risultati in formato leggibile (K, M, G). E' come guardare il serbatoio della macchina: ti dice quanto spazio hai ancora prima di restare a secco. Utile per capire se un problema di "disk full" e' reale.
+RIASSUNTO: df [-h] — spazio disponibile per filesystem. -h = leggibile.
+
+ARGOMENTO: du
+NARRAZIONE: Il comando du (disk usage) misura quanto "pesa" una directory o un file. du -sh mostra il totale in formato leggibile di una singola directory. du -sh * mostra il peso di ogni elemento nella directory corrente. E' lo strumento per trovare le cartelle che mangiano piu' spazio.
+RIASSUNTO: du [-sh] percorso — dimensione di file/directory. -s totale, -h leggibile.
+
+ARGOMENTO: tar
+NARRAZIONE: Il comando tar crea e estrae archivi (file .tar.gz o .tar.bz2). E' come mettere documenti in una scatola: raggruppi piu' file in un solo archivio. Con -c crei l'archivio, con -x lo estrai, con -z usi la compressione gzip, con -v mostra cosa sta facendo. tar non e' compressione: e' contenitore. La compressione la fa gzip/bzip2.
+RIASSUNTO: tar -czf archivio.tar.gz cartella — crea. tar -xzf archivio.tar.gz — estrae. -c crea, -x estrae, -z gzip, -v verboso.

@@ -1,0 +1,27 @@
+ARGOMENTO: ip
+NARRAZIONE: Il comando ip mostra e gestisce le interfacce di rete, gli indirizzi IP e le rotte. ip addr mostra gli indirizzi IP assegnati a ogni interfaccia di rete. ip link mostra lo stato delle interfacce (up/down). E' il comando moderno che ha sostituito ifconfig: piu' potente e piu' preciso.
+RIASSUNTO: ip addr — indirizzi IP. ip link — stato interfacce. Sostituisce ifconfig.
+
+ARGOMENTO: ss
+NARRAZIONE: Il comando ss (socket statistics) mostra le connessioni di rete attive: socket in ascolto, connessioni stabilite, porte aperte. ss -tlnp mostra le porte TCP in ascolto con i processi associati. E' il sostituto moderno di netstat: piu' veloce e piu' dettagliato.
+RIASSUNTO: ss [-tlnp] — socket e connessioni. -t TCP, -l in ascolto, -n numerico, -p processi.
+
+ARGOMENTO: ping
+NARRAZIONE: Il comando ping invia pacchetti ICMP a un host e aspetta le risposte. E' come lanciare una palla e aspettare che rimbalzi: se arriva la risposta, il sistema e' raggiungibile. ping -c 3 google.com manda 3 pacchetti e poi si ferma. Il tempo di risposta (latenza) ti dice quanto e' "lontano" il server.
+RIASSUNTO: ping [-c N] host — verifica raggiungibilita'. -c N limita a N pacchetti.
+
+ARGOMENTO: curl
+NARRAZIONE: Il comando curl trasferisce dati da o verso un server via URL. E' come un browser nel terminale: puoi scaricare pagine web, API REST, file. curl https://example.com mostra l'HTML della pagina. Con -o salvi il contenuto in un file. Con -X POST invii dati a un server.
+RIASSUNTO: curl URL — scarica contenuto. -o file — salva. -X POST — invia dati.
+
+ARGOMENTO: ssh
+NARRAZIONE: Il comando ssh (secure shell) ti collega remotamente a un altro computer in modo sicuro. Tutto il traffico e' crittografato: nessuno puo' intercettare cosa stai facendo. ssh utente@host ti connette; da lì puoi eseguire comandi sul sistema remoto come se fossi davanti ad esso.
+RIASSUNTO: ssh utente@host — collegamento remoto sicuro. Tutto crittografato.
+
+ARGOMENTO: scp
+NARRAZIONE: Il comando scp (secure copy) copia file tra sistemi via rete, usando lo stesso canale sicuro di ssh. E' come cp, ma attraverso la rete: scp file.txt utente@host:/percorso copia il file sul sistema remoto. Con -r copi intere directory.
+RIASSUNTO: scp [-r] file utente@host:percorso — copia file via rete (sicuro).
+
+ARGOMENTO: rsync
+NARRAZIONE: Il comando rsync sincronizza file tra due posizioni, locale o remote. La differenza con scp: rsync copia solo le differenze (delta sync), quindi e' molto piu' veloce su grandi quantita' di dati. Con -a mantieni permessi e date, con -v vedi cosa sta facendo, con -z compressi i dati durante il trasferimento.
+RIASSUNTO: rsync [-avz] sorgente destinazione — sincronizza copiando solo le differenze.
