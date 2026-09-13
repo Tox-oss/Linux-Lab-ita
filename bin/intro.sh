@@ -242,6 +242,13 @@ while :; do
     say "Troppo lungo (max 16 caratteri). Riprova:"
     continue
   fi
+  # Nome gia' in uso dal sistema (auditor, bin, daemon, nobody...): adduser
+  # fallirebbe in silenzio (|| true) e il chpasswd successivo cambierebbe la
+  # password di un account di sistema, dentro il quale poi entrerebbe `su -`.
+  if id "$NOME" >/dev/null 2>&1; then
+    say "'${NOME}' e' gia' un account di questo sistema. Scegline un altro:"
+    continue
+  fi
   break
 done
 
@@ -254,7 +261,7 @@ if command -v adduser >/dev/null 2>&1; then
   printf '%s:%s\n' "$NOME" "${NOME}pass" | chpasswd 2>/dev/null || true
 else
   useradd -m -s /bin/bash "$NOME" >/dev/null 2>&1 || true
-  usermod -aG sudo "$NOME" >/dev/null 2>&1 || true
+  usermod -aG wheel "$NOME" >/dev/null 2>&1 || true
   printf '%s\n' "$NOME:${NOME}pass" | chpasswd 2>/dev/null || true
 fi
 

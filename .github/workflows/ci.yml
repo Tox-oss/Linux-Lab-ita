@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    name: Sintassi shell
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: bash -n su ogni script
+        run: |
+          rc=0
+          for f in $(git ls-files '*.sh') bin/lab bin/lab-completion.bash; do
+            bash -n "$f" || { echo "::error file=$f::errore di sintassi"; rc=1; }
+          done
+          exit $rc
+      - name: shellcheck (informativo)
+        continue-on-error: true
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+          shellcheck -S warning $(git ls-files '*.sh') bin/lab || true
+
+  test:
+    name: Build immagine + suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: make build
+      - name: Suite anti-oracolo (root)
+        run: make test-root
+      - name: Suite utente normale (non-root)
+        run: make test-nonroot
