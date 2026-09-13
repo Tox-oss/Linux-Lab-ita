@@ -34,11 +34,11 @@ lab start 01-filesystem
 ## Build locale
 
 ```bash
-git clone https://github.com/Tox-oss/Linux-Lab.git
-cd Linux-Lab
+git clone https://github.com/Tox-oss/Linux-Lab-ita.git
+cd Linux-Lab-ita
 make build   # oppure: docker build -t alpine-latest-assisted-labs:latest .
 make run     # sessione interattiva
-make test    # esegue tutti i 10 lab in modalità anti-cheat
+make test    # esegue tutti i 10 lab in modalità anti-cheat (root + non-root)
 ```
 
 ## I 10 laboratori

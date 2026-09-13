@@ -70,6 +70,21 @@ if [ -t 0 ] && [ -t 1 ] \
   fi
 fi
 
+# Rientro automatico nell'identita' personale (dalla SECONDA sessione in poi).
+# L'intro non riparte (.intro-done vive sul volume) ma l'account Linux e' stato
+# ricreato dall'entrypoint leggendo .intro-name: senza questo blocco la shell
+# resterebbe root, contraddicendo la promessa dell'intro ("da ora sei NOME").
+# Guardie: solo con TTY, solo da root, solo se l'account esiste davvero.
+# Vie di fuga: ASSISTED_LABS_NO_AUTOSU=1 (resta root) oppure SKIP_INTRO=1.
+if [ -z "${ASSISTED_LABS_NO_BOX:-}" ]    && [ -t 0 ] && [ -t 1 ]    && [ -z "${ASSISTED_LABS_NO_AUTOSU:-}" ]    && [ -z "${SKIP_INTRO:-}" ]    && [ "$CUR_USER" = "root" ]    && [ -n "$SAVED_USER" ]    && id "$SAVED_USER" >/dev/null 2>&1; then
+  printf '
+[32m%s[0m
+
+' "=== Bentornato, ${SAVED_USER}: rientro nella tua identita' ==="
+  su - "$SAVED_USER"
+  ASSISTED_LABS_NO_BOX=1
+fi
+
 # Larghezza interna del box (celle tra i due bordi verticali).
 # Momo: i caratteri di disegno box si usano solo se il terminale li
 # supporta; altrimenti si ripiega su un box ASCII (+, -, |) che si
@@ -96,7 +111,7 @@ bottom(){ printf '%s'   "${C_GRN}${BL}"; printf '%*s' "$W" "" | tr ' ' "$HB"; pr
 
 if [ -n "${ASSISTED_LABS_NO_BOX:-}" ]; then
   printf '%s\n' ''
-  printf '%s\n' "${C_DIM}Hai chiuso la shell di ${C_BLD}$(cat /workspace/training/.intro-name 2>/dev/null || echo 'il tuo utente')${C_RST}${C_DIM}. Sei tornato a ${C_BLD}root${C_RST}${C_DIM}: usa ${C_BLD}su - nome${C_RST}${C_DIM} per rientrare o ${C_BLD}exit${C_RST}${C_DIM} per chiudere.${C_RST}"
+  printf '%s\n' "${C_DIM}Hai chiuso la shell di ${C_BLD}$(cat "$INTRO_NAME_FILE" 2>/dev/null || echo 'il tuo utente')${C_RST}${C_DIM}. Sei tornato a ${C_BLD}root${C_RST}${C_DIM}: usa ${C_BLD}su - nome${C_RST}${C_DIM} per rientrare o ${C_BLD}exit${C_RST}${C_DIM} per chiudere.${C_RST}"
   printf '%s\n' ''
   return 0
 fi

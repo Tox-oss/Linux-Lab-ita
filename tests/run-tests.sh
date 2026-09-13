@@ -11,7 +11,7 @@ set -uo pipefail
 ROOT=/opt/assisted-labs
 LABS_DIR="$ROOT/labs"
 IDS="$(find "$LABS_DIR" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | sort)"
-[ -z "$IDS" ] && IDS="01-filesystem 02-permissions 03-users-groups 04-processes 05-text-processing 06-navigation-search 07-storage-archives 08-system-admin 09-network-transfer"
+[ -z "$IDS" ] && IDS="01-filesystem 02-permissions 03-users-groups 04-processes 05-text-processing 06-navigation-search 07-storage-archives 08-system-admin 09-network-transfer 10-file-comparison"
 TRAINING="${LAB_TRAINING_ROOT:-/workspace/training}"
 
 declare -i TESTS_OK=0 TESTS_BAD=0
