@@ -39,12 +39,14 @@ fi
 if [ -t 1 ]; then
   C_GRN=$'\033[32m'
   C_CYN=$'\033[36m'
+  C_YEL=$'\033[33m'
   C_DIM=$'\033[2m'
   C_BLD=$'\033[1m'
   C_RST=$'\033[0m'
 else
   C_GRN=
   C_CYN=
+  C_YEL=
   C_DIM=
   C_BLD=
   C_RST=
@@ -101,16 +103,18 @@ fi
 
 top
 mid "${C_BLD}Assisted Linux Labs${C_RST}"
-mid "il tuo laboratorio Linux, pronto per te."
+mid "${C_YEL}il tuo laboratorio Linux, pronto per te.${C_RST}"
 bottom
 
 printf '%s\n' ''
-printf '%s\n' "${C_DIM}Sei in una sandbox sicura: sperimenta senza timore.${C_RST}"
+printf '%s\n' "${C_YEL}Sei in una sandbox sicura: sperimenta senza timore.${C_RST}"
 printf '%s\n' ''
 printf '  %s%-14s%s %s\n' "${C_CYN}" "lab list"      "${C_RST}" "cosa posso fare qui"
 printf '  %s%-14s%s %s\n' "${C_CYN}" "lab start <id>" "${C_RST}" "parti il primo esercizio"
 printf '  %s%-14s%s %s\n' "${C_CYN}" "lab check <id>" "${C_RST}" "verifica il lavoro  [non cancella nulla]"
 printf '  %s%-14s%s %s\n' "${C_CYN}" "lab hint  <id>" "${C_RST}" "un indizio se ti blocchi"
+printf '  %s%-14s%s %s\n' "${C_CYN}" "lab mode"       "${C_RST}" "scegli la modalita: standard · arcade · class"
+printf '  %s%-14s%s %s\n' "${C_CYN}" "lab mode class" "${C_RST}" "le lezioni di tutti i lab, in ordine"
 printf '  %s%-14s%s %s\n' "${C_CYN}" "lab help"       "${C_RST}" "tutti i comandi e le regole"
 printf '%s\n' ''
 printf '  %s%s%s   %s%s%s\n' "${C_DIM}" "Prima cosa da fare:" "${C_RST}" "${C_BLD}" "lab list" "${C_RST}"

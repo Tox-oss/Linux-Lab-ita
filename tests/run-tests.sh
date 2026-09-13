@@ -3,6 +3,9 @@
 # Chiama i check.sh DIRETTAMENTE (mai attraverso `lab check` come oracolo di se
 # stessa) e valida anche i casi di fallimento, l'idempotenza delle soluzioni e
 # il conteggio PASS/FAIL costante (scopre i check che escono a meta', P1-5).
+# Include il test anti-oracolo: LAB_QA_MODE=1 deve bloccare `lab solution`
+# per ogni lab (exit != 0, nessun output) — chiude il rischio che la soluzione
+# diventi l'oracolo dei check (falso positivo anti-cheat).
 set -uo pipefail
 
 ROOT=/opt/assisted-labs
@@ -50,7 +53,29 @@ sabotage() {
 
 rev_ok() { printf '  %s\n\n' "$1"; }
 
+IDX=0
 for id in $IDS; do
+  # 0. Anti-oracolo: LAB_QA_MODE=1 deve bloccare `lab solution` (exit != 0) e
+  #    NON deve far trapelare la soluzione: l'unico output ammesso e'
+  #    l'annuncio di blocco. Se esce altro (righe della soluzione), il test e'
+  #    a rischio falso positivo (la soluzione usata come oracolo).
+  step "0/$id  anti-oracolo: LAB_QA_MODE=1 lab solution $id bloccato senza leak"
+  out0="$(LAB_QA_MODE=1 "$ROOT/bin/lab" solution "$id" 2>&1)"; rc0=$?
+  # Elimina SOLO l'annuncio di blocco atteso; cio' che resta e' output residuo.
+  leak0=$(printf '%s' "$out0" | grep -v 'LAB_QA_MODE attivo' \
+                                 | grep -v 'niente falsi positivi' \
+                                 | grep -v 'Risolvi il lab con le tue conoscenze' \
+                                 | grep -v 'nel report come finding di qualita' \
+                                 | tr -d '[:space:]')
+  if [ "$rc0" -eq 0 ]; then
+    t_fail "lab solution NON bloccato da LAB_QA_MODE (rc=0)"
+  elif [ -n "$leak0" ]; then
+    t_fail "lab solution ha fatto trapelare contenuto oltre il blocco (leak)"
+  else
+    t_pass "lab solution bloccato da LAB_QA_MODE (rc=$rc0, nessun leak)"
+  fi
+  rev_ok "$out0"
+
   # 1. Reset => fallimento
   step "1/$id  reset -> check deve FALLIRE"
   lab reset "$id" >/dev/null 2>&1 || true
@@ -70,6 +95,7 @@ for id in $IDS; do
   # 2. Soluzione => successo, con idempotenza
   step "2/$id  solution (x2, idempotenza) -> check deve PASSARE"
   ok=1
+  bP=0; bF=0
   if ! bash "$ROOT/labs/$id/solution.sh" >/dev/null 2>&1; then
     t_fail "la soluzione termina con errore alla 1a esecuzione"
     ok=0
@@ -103,7 +129,7 @@ for id in $IDS; do
   outD="$(run_check "$id")"; rcD=$?
   dP=$(count_pass "$outD"); dF=$(count_fail "$outD")
   if [ "$rcD" -eq 0 ]; then
-    t_fail "il sabotaggio non e stato rilevato"
+    t_fail "il sabotaggio non e' stato rilevato"
   else
     t_pass "sabotaggio rilevato (FAIL=$dF)"
   fi
@@ -121,6 +147,45 @@ for id in $IDS; do
   else
     t_fail "conteggio instabile: soluzione=$totB, sabotaggio=$totD (early-exit P1-5?)"
   fi
+
+  # 5. Engine varianti (HARDCADE): i file shell dei lab NON devono presupporre
+  #     i soli valori BASE. Una variante (ciclica 1..5, deterministica) viene
+  #     esportata con hcv_values, poi reset + solution + check della STESSA
+  #     variante devono PASSARE (stesso protocollo anti-oracolo del resto della
+  #     suite: check.sh invocato direttamente, mai `lab check` come oracolo).
+  step "5/$id  variante V_* (hcv_values) -> reset + solution + check devono PASSARE"
+  if ! declare -F hcv_values >/dev/null 2>&1; then
+    . "$ROOT/lib/variants.sh"
+  fi
+  vn=$(( (IDX % 5) + 1 ))
+  if ! varsV="$(hcv_values "$id" "$vn" 2>/dev/null)"; then
+    t_fail "hcv_values non determina la variante $vn per $id"
+  else
+    eval "$varsV"
+    okv=1
+    if ! bash "$ROOT/labs/$id/reset.sh" >/dev/null 2>&1; then
+      t_fail "reset della variante $vn termina con errore"
+      okv=0
+    elif ! bash <(sed -e '/^lab check/d' "$ROOT/labs/$id/solution.sh") >/dev/null 2>&1; then
+      # NB: si lancia solution.sh SENZA la chiamata finale `lab check`:
+      # in modalita standard il CLI riesporta i V_* BASE, quindi un check
+      # embedded non sa della variante. La suite valida col check.sh diretto.
+      t_fail "solution della variante $vn termina con errore"
+      okv=0
+    else
+      outV="$(bash "$ROOT/labs/$id/check.sh" 2>&1)"; rcV=$?
+      vP=$(count_pass "$outV"); vF=$(count_fail "$outV")
+      if [ "$rcV" -ne 0 ] || [ "$vF" -gt 0 ]; then
+        t_fail "check della variante $vn fallisce (FAIL=$vF)"
+        rev_ok "$outV"
+        okv=0
+      else
+        t_pass "variante $vn OK (PASS=$vP)"
+      fi
+    fi
+    unset "${!V_@}" 2>/dev/null || true
+  fi
+  IDX=$((IDX + 1))
 done
 
 printf '\n\033[1;34m=== RIEPILOGO ===\033[0m\n'

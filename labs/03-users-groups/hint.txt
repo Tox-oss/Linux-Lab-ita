@@ -8,38 +8,38 @@
   - '-s /bin/bash': imposta la shell di login interattiva.
 • 'usermod -aG <gruppo> <utente>': aggiunge ('-a' per append) un gruppo secondario ('-G') all'utente senza revocare i gruppi a cui già appartiene.
 • 'chown utente:gruppo': imposta contemporaneamente proprietario e gruppo assegnato alla cartella.
-• 770 = rwxrwx--- (accesso completo a learner e a chi fa parte del gruppo devops; nessun accesso per gli altri).
+• @V_TEAM_MODE@ = rwxrwx--- (accesso completo a @V_USER@ e a chi fa parte del gruppo @V_GROUP@; nessun accesso per gli altri).
 • Questi comandi modificano utenti e gruppi nel container e richiedono privilegi amministrativi. Non modificano l'host Docker.
 ---
 [STRATEGIA & BEST PRACTICES]
-• Posizione di lavoro: verifica di trovarti in '/workspace/training/users-lab' (usa 'pwd').
+• Posizione di lavoro: verifica di trovarti in '/workspace/training/@V_DIR@' (usa 'pwd').
 • Ordine logico delle operazioni:
-  1. Crea il gruppo 'devops' con 'groupadd'.
-  2. Crea l'utente 'learner' specificando i flag per home e shell bash.
-  3. Aggiungi learner a devops con 'usermod -aG'.
-  4. Crea la cartella 'team' in users-lab.
+  1. Crea il gruppo '@V_GROUP@' con 'groupadd'.
+  2. Crea l'utente '@V_USER@' specificando i flag per home e shell bash.
+  3. Aggiungi @V_USER@ a @V_GROUP@ con 'usermod -aG'.
+  4. Crea la cartella '@V_TEAM@' in @V_DIR@.
   5. Cambia proprietario e gruppo della cartella con 'chown'.
-  6. Restringi i permessi a 770 con 'chmod'.
-• Prima di ogni passaggio puoi verificare il risultato con 'getent group devops', 'id learner' e 'stat'.
+  6. Restringi i permessi a @V_TEAM_MODE@ con 'chmod'.
+• Prima di ogni passaggio puoi verificare il risultato con 'getent group @V_GROUP@', 'id @V_USER@' e 'stat'.
 ---
 [COMANDI GUIDATI & ALTERNATIVE]
 1. Creazione gruppo e utente:
-   groupadd devops
-   useradd -m -s /bin/bash learner
+   groupadd @V_GROUP@
+   useradd -m -s /bin/bash @V_USER@
 
-2. Aggiunta al gruppo secondario devops:
-   usermod -aG devops learner
+2. Aggiunta al gruppo secondario @V_GROUP@:
+   usermod -aG @V_GROUP@ @V_USER@
 
 3. Struttura cartella di team, ownership e permessi:
-   mkdir -p team
-   chown learner:devops team
-   chmod 770 team
+   mkdir -p @V_TEAM@
+   chown @V_USER@:@V_GROUP@ @V_TEAM@
+   chmod @V_TEAM_MODE@ @V_TEAM@
 Attenzione: usa sempre '-aG' con usermod. '-G' senza '-a' sostituisce i gruppi secondari esistenti.
 ---
 [VERIFICA MANUALE AUTONOMA]
 Prima di lanciare 'lab check 03-users-groups', verifica lo stato di sistema:
 • Ispeziona l'identità dell'utente e i suoi gruppi:
-  id learner
-  getent passwd learner
-• Ispeziona proprietà e permessi della directory team:
-  stat -c '%n -> Owner: %U:%G | Mode: %a (%A)' team
+  id @V_USER@
+  getent passwd @V_USER@
+• Ispeziona proprietà e permessi della directory @V_TEAM@:
+  stat -c '%n -> Owner: %U:%G | Mode: %a (%A)' @V_TEAM@

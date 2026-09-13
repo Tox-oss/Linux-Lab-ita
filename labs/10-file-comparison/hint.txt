@@ -6,52 +6,52 @@
 • Tutti questi comandi restituiscono uno stato di uscita diverso da zero quando trovano differenze: e' normale, non un errore da correggere.
 ---
 [STRATEGIA & ATTENZIONE AI PERCORSI]
-• Posizione di lavoro: verifica con 'pwd' di essere nella cartella dell'esercizio (atteso: .../diff-lab).
+• Posizione di lavoro: verifica con 'pwd' di essere nella cartella dell'esercizio (atteso: .../@V_DIR@).
 • Struttura finale attesa:
-  diff-lab/
-  ├── config.diff
-  ├── report_check.txt
-  ├── only_prod.txt
-  └── release_diff.txt
+  @V_DIR@/
+  ├── @V_OUT_DIFF@
+  ├── @V_OUT_CHECK@
+  ├── @V_OUT_ONLY@
+  └── @V_OUT_REL@
 • Ordine logico consigliato:
-  1. diff -u sui due config, redirect in config.diff.
-  2. cmp -s sui due report, scrivi il verdetto in report_check.txt.
-  3. comm -23 sulle due liste di host (gia' ordinate), redirect in only_prod.txt.
-  4. diff -r sulle due cartelle release, redirect in release_diff.txt.
+  1. diff -u sui due config, redirect in @V_OUT_DIFF@.
+  2. cmp -s sui due report, scrivi il verdetto in @V_OUT_CHECK@.
+  3. comm -23 sulle due liste di host (gia' ordinate), redirect in @V_OUT_ONLY@.
+  4. diff -r sulle due cartelle release, redirect in @V_OUT_REL@.
   5. rm del file deprecato.
 • Attenzione: quando i file confrontati sono identici, molti di questi comandi non
   stampano nulla — non e' un blocco, e' un successo silenzioso.
 ---
 [COMANDI GUIDATI & ALTERNATIVE]
 1. Diff dei config (formato unified, lo stesso usato da 'git diff'):
-   diff -u config.old.conf config.new.conf > config.diff
+   diff -u @V_CFG_OLD@ @V_CFG_NEW@ > @V_OUT_DIFF@
 
 2. Verdetto di identita con cmp (entrambe le forme sono valide):
-   cmp -s report_a.txt report_b.txt && echo identici > report_check.txt || echo diversi > report_check.txt
+   cmp -s @V_REP_A@ @V_REP_B@ && echo identici > @V_OUT_CHECK@ || echo diversi > @V_OUT_CHECK@
    oppure, passo per passo:
-   cmp report_a.txt report_b.txt
+   cmp @V_REP_A@ @V_REP_B@
    (nessun output = identici)
-   printf 'identici\n' > report_check.txt
+   printf '@V_VERD@\n' > @V_OUT_CHECK@
 
 3. Solo host di produzione (comm si aspetta input ordinato: qui lo e' gia'):
-   comm -23 servers_prod.txt servers_staging.txt > only_prod.txt
+   comm -23 @V_PROD@ @V_STAG@ > @V_OUT_ONLY@
 
 4. Diff ricorsivo tra le due release:
-   diff -r release_v1 release_v2 > release_diff.txt
+   diff -r @V_REL_A@ @V_REL_B@ > @V_OUT_REL@
 
 5. Pulizia finale:
-   rm deprecated.old
+   rm @V_DEPRECATED@
 ---
 [VERIFICA MANUALE AUTONOMA]
 Prima di lanciare 'lab check 10-file-comparison', controlla il tuo operato:
 • Rileggi il diff dei config: deve mostrare la riga rimossa e quella aggiunta:
-  cat config.diff
+  cat @V_OUT_DIFF@
 • Conferma il verdetto sui report:
-  cmp report_a.txt report_b.txt && echo "sono davvero identici"
-  cat report_check.txt
+  cmp @V_REP_A@ @V_REP_B@ && echo "sono davvero identici"
+  cat @V_OUT_CHECK@
 • Controlla la lista degli host solo-prod:
-  cat only_prod.txt
+  cat @V_OUT_ONLY@
 • Verifica che il diff tra le release citi il file giusto:
-  grep app.conf release_diff.txt
+  grep @V_APP_CONF@ @V_OUT_REL@
 • Verifica che il file deprecato sia sparito:
-  ls deprecated.old 2>/dev/null || echo "file deprecato rimosso correttamente"
+  ls @V_DEPRECATED@ 2>/dev/null || echo "file deprecato rimosso correttamente"

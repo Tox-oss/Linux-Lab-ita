@@ -3,4 +3,4 @@ RIPASSO RAPIDO
   useradd -m -s /bin/bash  crea utente con home e shell.
   usermod -aG <gruppo> <utente>  aggiunge un gruppo SECONDARIO:
   la -a (append) NON rimuove i gruppi esistenti (senza -a li azzererebbe).
-  chown utente:gruppo  cambia owner e group insieme;  770 = rwx per chi e' nel team.
+  chown utente:gruppo  cambia owner e group insieme;  @V_TEAM_MODE@ = rwx per chi e' nel @V_TEAM@.

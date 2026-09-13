@@ -23,11 +23,22 @@ else
   TRAINING_ROOT="/workspace/training"
 fi
 export LAB_TRAINING_ROOT="$TRAINING_ROOT"
+# Motore VARIANTI HARDCADE: converte il lab in un set di valori per token V_*.
+# - BASE (variante 0): i valori canonici del corso.
+# - HARDCADE: hc_use_variant <id> <num> sovrascrive per-lab con la variante scelta.
+# I token NON vengono esportati globalmente all'avvio (i valori V_* sono
+# per-lab e varierebbero il rendering dei lab STANDARD/ARCADE): require_lab
+# applica SEMPRE i valori del lab di destinazione (base 0, o la variante se
+# HARDCADE), cosi STANDARD/ARCADE e la suite restano IDENTICI a prima.
+source "$ROOT/lib/variants.sh"
 # Versione del CLI (bin/lab). NON coincide con il numero degli archivi
 # `ver NNNN` in ~/Assisted-Labs-Versioni (quelli li gestisce versiona.sh):
-# questa e la versione del tool `lab`, incrementata a mano quando il CLI
-# subisce modifiche sostanziali (finding #6).
-VERSION="2.6"
+# versione del tool `lab`, incrementata a mano quando il CLI subisce
+# modifiche sostanziali (finding #6). 2.10: guardia lab check/hint su lab
+# non corrente in HARDCADE (F2) + terminologia errori al posto di vite (F1).
+# 2.11: la dettatura si supera anche con SPAZIO (oltre che con INVIO), ovunque
+# appaia testo dettato (bin/lab e bin/intro.sh).
+VERSION="2.11"
 
 # ---------------------------------------------------------------------------
 # output helpers
@@ -93,6 +104,23 @@ box_top()     { printf '%s' "$BX_TL"; printf '%*s' "$BOX_W" "" | tr ' ' "$BX_HB"
 box_mid()     { local t="$1"; local pad=$((BOX_W - $(disp_w "$t"))); printf '%s' "$BX_VB"; printf '%s%*s' "$t" "$pad" ""; printf '%s\n' "$BX_VB"; }
 box_bottom()  { printf '%s' "$BX_BL"; printf '%*s' "$BOX_W" "" | tr ' ' "$BX_HB"; printf '%s\n' "$BX_BR"; }
 
+# Descrive una sezione del menu di benvenuto: le righe compaiono in lampeggio
+# (SGR 5) per LAB_BLINK_SECS secondi, poi tornano stabili (one-shot). Serve a
+# catturare l'attenzione sulle descrizioni delle modalita. In non-TTY stampa
+# subito il testo stabile SENZA codici ANSI (niente rumore per pipe/suite).
+blink_desc() {
+  local txt="$1" n
+  if [ -t 1 ]; then
+    n=$(printf '%b' "$txt" | wc -l)
+    printf '\033[5m%b\033[25m' "$txt"
+    sleep "${LAB_BLINK_SECS:-1.8}"
+    printf '\033[%dA\033[J' "$n"
+    printf '%b' "$txt"
+  else
+    printf '%b' "$txt"
+  fi
+}
+
 usage() {
   box_top
   box_mid "  lab — Assisted Linux Labs"
@@ -112,16 +140,17 @@ COMANDI
   hint   <lab-id> --all        tutti gli indizi
   hint   <lab-id> --reset      riparte dagli indizi
   class  <lab-id>              lezione narrata interattiva sugli argomenti
+  mode class                  lezioni di TUTTI i lab, in ordine (01 → 10)
   solution <lab-id>            mostra una soluzione possibile
   reset  <lab-id>              ripristina SOLO quel lab
   reset  --all                azzera TUTTI i lab in un colpo
   status                       avanzamento di tutti i lab
-  mode   [standard|arcade|hardcade] visualizza o cambia modalita (-s/-a/-hc)
+  mode   [standard|arcade|hardcade|class] visualizza o cambia modalita (-s/-a/-hc)
   doctor                       diagnosi ambiente
   quit                         chiude la sessione e il terminale
   help|--help                  questo messaggio
   readme                       guida estesa
-  anim  <nome>                 anteprima animazioni (fireworks, rain, all)
+  anim  <nome>                 anteprima animazioni (lesson, rocket, fireworks, rain, all)
 
 EOF
   cat <<'EOF2'
@@ -152,14 +181,15 @@ NOTE
   - per scrivere testo in un file: printf (preciso) oppure echo (newline finale ok).
   - i file di lavoro vivono nella root della modalita corrente (volume Docker)
   - i lab ufficiali vivono in /opt/assisted-labs     (immagine)
-  - i testi scorrono con battitura veloce (0.04 s/car); premi INVIO durante lo
-    scorrimento per mostrare subito il resto del messaggio.
-  - le lezioni (lab class) scorrono a 0.03 s/car (LAB_TYPE_CLASS).
+  - i testi scorrono con battitura veloce (0.04 s/car); premi INVIO o SPAZIO
+    durante lo scorrimento per mostrare subito il resto del messaggio.
+  - le lezioni (lab class / lab mode class) scorrono a 0.03 s/car (LAB_TYPE_CLASS).
   - nelle consegne i comandi Linux sono evidenziati in magenta (ad alto contrasto).
 
 ESEMPI
   lab list
   lab class 01-filesystem
+  lab mode class
   lab start 01-filesystem
   lab check 01-filesystem
   lab hint  01-filesystem
@@ -190,21 +220,22 @@ welcome() {
   printf 'Modalita attuale: %s\n' "$cur_mode"
   printf 'Puoi cambiarla quando vuoi (anche in seguito con:  lab mode).\n'
   printf '\n'
-  printf '  %s\n' "$(cmd '[1] Standard')"
-  printf '      Facile, guida passo-passo che tiene per mano.\n'
-  printf '      Tentativi illimitati e indizi gratuiti. Consigliata per iniziare.\n'
-  printf '\n'
-  printf '  %s\n' "$(cmd '[2] Arcade')"
-  printf '      Sfida a 3 vite con timer, indizi limitati (lampadine) e ostacoli.\n'
-  printf '\n'
-  local choices="1/2"
+  local mm="" choices="1/2"
+  mm+="  $(cmd '[1] Standard')\n"
+  mm+="      Facile, guida passo-passo che tiene per mano.\n"
+  mm+="      Tentativi illimitati, indizi gratuiti: ideale per iniziare.\n"
+  mm+="\n"
+  mm+="  $(cmd '[2] Arcade')\n"
+  mm+="      Sfida a 3 vite con timer, indizi limitati (lampadine) e ostacoli.\n"
+  mm+="\n"
   if is_hardcade || arcade_easter_unlocked || [ "${LAB_EH_UNLOCK:-}" = "1" ]; then
-    printf '  %s\n' "$(cmd '[3] Hardcade')"
-    printf '      Sfida segreta a 3 errori condivisi: si sblocca dopo una run\n'
-    printf '      ARCADE perfetta (tutti i lab, 0 vite perse).\n'
-    printf '\n'
+    mm+="  $(cmd '[3] Hardcade')\n"
+    mm+="      Sfida segreta a 3 errori condivisi: varianti diverse a ogni run,\n"
+    mm+="      si sblocca con una run ARCADE perfetta (tutti i lab, 0 vite perse).\n"
+    mm+="\n"
     choices="1/2/3"
   fi
+  blink_desc "$mm"
   printf '  [invio] = mantieni la modalita attuale (%s)\n' "$cur_mode"
   printf 'Scegli [%s, invio = mantieni] > ' "$choices"
   local scelta
@@ -255,6 +286,9 @@ welcome() {
   two_col 16 "$(bold 'lab start <id>')" "Parti il primo esercizio"
   two_col 16 "$(bold 'lab check <id>')" "Verifica il lavoro [non cancella nulla]"
   two_col 16 "$(bold 'lab hint <id>')"  "Un indizio se ti blocchi"
+  two_col 16 "$(bold 'lab mode')"       "Cambia modalita (standard · arcade · class)"
+  two_col 16 "$(bold 'lab class <id>')" "Lezione narrata di un singolo lab"
+  two_col 16 "$(bold 'lab mode class')" "Lezioni di tutti i lab, in ordine (01 → 10)"
   printf '\n'
   printf '  Prima cosa da fare:   lab list\n'
   printf '  Tutti i comandi:      lab help\n'
@@ -303,6 +337,14 @@ require_lab() {
     printf 'lab disponibili:\n' >&2
     lab_ids | sed 's/^/  /' >&2
     exit 2
+  fi
+  # Token V_* APPLICATI SEMPRE per-lab: in HARDCADE la variante scelta (0 = base),
+  # altrimenti la BASE canonica. Nessun export globale: il lab di destinazione
+  # decide i propri valori, quindi STANDARD/ARCADE restano identici a prima.
+  if is_hardcade; then
+    hc_use_variant "$id" "$(hc_variant "$id")"
+  else
+    hc_use_variant "$id" 0
   fi
   # Lab "corrente": l'ultimo lab toccato dall'utente. Permette a `lab -h`
   # (senza id) di indovinare su quale lab richiedere gli indizi.
@@ -442,50 +484,146 @@ typewrite_skip_to_sentence() {
   tw_skip_idx=${#a}
 }
 
+# --- Dettatura "solo INVIO o SPAZIO". Durante la battitura l'utente NON deve
+# poter digitare niente altro che INVIO o SPAZIO: entrambi completano subito
+# la frase corrente; ogni altro tasto viene scartato senza eco e senza effetto
+# (non fa saltare la battitura) e non resta in coda per i menu o i prompt
+# successivi. Il terminale passa a modalita' non canonica senza echo (stty),
+# con ripristino garantito anche su Ctrl-C (stesso schema delle animazioni).
+TW_TTY_RAW=0
+TW_STTY_SAVED=""
+tw_trap() {
+  if [ "${TW_TTY_RAW:-0}" = "1" ] && [ -n "${TW_STTY_SAVED:-}" ]; then
+    stty "$TW_STTY_SAVED" </dev/tty 2>/dev/null || true
+    TW_TTY_RAW=0
+  fi
+  trap - INT TERM EXIT
+}
+tw_interrupt() {
+  tw_trap
+  exit 130
+}
+tw_raw_on() {
+  [ -t 1 ] || return 1
+  TW_STTY_SAVED="$(stty -g </dev/tty 2>/dev/null)" || { TW_STTY_SAVED=""; return 1; }
+  stty -icanon -echo </dev/tty 2>/dev/null || { TW_STTY_SAVED=""; return 1; }
+  TW_TTY_RAW=1
+  trap 'tw_interrupt' INT TERM
+  trap 'tw_trap' EXIT
+  return 0
+}
+tw_raw_off() {
+  [ -t 1 ] || return 0
+  tw_trap
+  return 0
+}
+# tw_enter <secondi> — attende per <secondi> (accetta decimali) che l'utente
+# prema INVIO o SPAZIO. Ritorna 0 se arriva SOLO INVIO o SPAZIO entro la
+# finestra, 1 se scade. Ogni altro tasto viene letto e scartato subito: non
+# compare a schermo e non interrompe la dettatura.
+tw_enter() {
+  local win="$1" c k iters
+  iters="$(awk -v w="$win" 'BEGIN{printf "%d", (w/0.01)+1}')"
+  for (( k=0; k<iters; k++ )); do
+    if IFS= read -r -s -n1 -t 0.01 c </dev/tty 2>/dev/null; then
+      case "$c" in
+        $'\n'|$'\r'|' ') return 0 ;;
+      esac
+    fi
+  done
+  return 1
+}
+# tw_flush — consuma l'input rimasto in coda (es. INVIO/SPAZIO tenuto premuto o
+# tasti digitati a schermo pieno) prima di uscire dalla dettatura: nulla deve
+# finire nei menu o nel prompt successivi.
+tw_flush() {
+  local c
+  while IFS= read -r -s -n1 -t 0.02 c </dev/tty 2>/dev/null; do :; done
+  return 0
+}
+
 # Consegna in testo grezzo (niente markdown spezzato).
 # Battitura lettera per lettera SOLO su terminale. Di default veloce (0.04
-# s/car); se l'utente preme INVIO durante lo scorrimento mostra il testo fino
-# al prossimo .!?, e infonde un ritmo da "dettatura": pausa lunga dopo .!?
-# (LAB_PAUSE_SENTENCE, default 0.4s) e pausa breve dopo ,;: (LAB_PAUSE_COMMA,
-# default 0.15s). Se LAB_INSTANT_RENDER=1 (salvaguardia arcade/hardcade) la
-# stampa e' istantanea. Negli ambienti non-TTY (suite, pipe, CI) stampa subito.
+# s/car); se l'utente preme INVIO o SPAZIO durante lo scorrimento mostra il
+# testo fino al prossimo .!?, e infonde un ritmo da "dettatura": pausa lunga
+# dopo .!? (LAB_PAUSE_SENTENCE, default 0.4s) e pausa breve dopo ,;:
+# (LAB_PAUSE_COMMA, default 0.15s). Durante la dettatura i soli tasti con
+# effetto sono INVIO e SPAZIO (completano subito la frase corrente); ogni
+# altro tasto viene scartato senza eco e senza residui. Se LAB_INSTANT_RENDER=1
+# (salvaguardia arcade/hardcade) la stampa e' istantanea. Negli ambienti
+# non-TTY (suite, pipe, CI) stampa subito.
 typewrite() {
   local line speed i c
   local pause_sentence="${LAB_PAUSE_SENTENCE:-0.4}"
   local pause_comma="${LAB_PAUSE_COMMA:-0.15}"
-speed="${LAB_TYPE_NARR:-0.04}"
+  speed="${LAB_TYPE_NARR:-0.04}"
+  # Colore della voce narrante. Due modi:
+  #   - LAB_TYPE_SPEAKER (es. "Root"): il personaggio che parla. Stampa
+  #     l'etichetta "<SPEAKER>:" in giallo opaco seguita dal testo del dialogo
+  #     nel colore normale ("Root: un'identita' tutta tua...").
+  #   - LAB_TYPE_COLOR (es. 33): colora l'INTERA riga con quell'ANSI (vecchio
+  #     comportamento, usato dove la riga non e' un dialogo).
+  # Default: nessun colore (comportamento storicamente invariato).
+  local c_in c_out
+  local tcol="${LAB_TYPE_COLOR:-}"
+  local spk="${LAB_TYPE_SPEAKER:-}"
+  if [ -n "$spk" ]; then
+    c_in=$'\033[33m'"${spk}:"$'\033[0m '
+    c_out=""
+  elif [ -n "$tcol" ]; then c_in=$'\033['"${tcol}m"; c_out=$'\033[0m'
+  else c_in=""; c_out=""; fi
   if [ "${1:-}" = "-c" ]; then
     speed="${LAB_TYPE_CMD:-0.04}"
     shift || true
   fi
+
+  # Su terminale la dettatura e' interattiva ("INVIO o SPAZIO completano");
+  # altrove si stampa tutto subito senza toccare il terminale.
+  local tty_mode=0
+  if [ -t 1 ] && [ "${LAB_INSTANT_RENDER:-0}" != "1" ] && [ "$speed" != "0" ]; then
+    if tw_raw_on; then tty_mode=1; fi
+  fi
+
   while IFS= read -r line; do
-    if [ -t 1 ] && [ "${LAB_INSTANT_RENDER:-0}" != "1" ] && [ "$speed" != "0" ]; then
+    if [ "$tty_mode" = "1" ]; then
+      printf '%s' "$c_in"
       for (( i=0; i<${#line}; i++ )); do
         printf '%s' "${line:i:1}"
         c="${line:i:1}"
-        # Pausa per punteggiatura: . ! ? → pausa piu lunga; , ; : → pausa breve
+        # Pausa per punteggiatura: . ! ? → pausa piu lunga; , ; : → pausa breve.
+        # In entrambe INVIO o SPAZIO completano subito la frase corrente.
         case "$c" in
           [.!?!])
-            if IFS= read -r -t "$pause_sentence" _ </dev/tty 2>/dev/null; then
+            if tw_enter "$pause_sentence"; then
               typewrite_skip_to_sentence "$line" "$((i+1))"
               break
             fi
             ;;
           [,\;:])
-            IFS= read -r -t "$pause_comma" _ </dev/tty 2>/dev/null || true
+            if tw_enter "$pause_comma"; then
+              typewrite_skip_to_sentence "$line" "$((i+1))"
+              break
+            fi
             ;;
         esac
-        # Aspetta input con timeout speed; se INVIO premesso → salta alla prossima frase
-        if IFS= read -r -t "$speed" _ </dev/tty 2>/dev/null; then
+        # Finestra standard tra un carattere e il successivo: INVIO o SPAZIO
+        # completano subito la frase corrente.
+        if tw_enter "$speed"; then
           typewrite_skip_to_sentence "$line" "$((i+1))"
           break
         fi
       done
-      printf '\n'
+      printf '\n%s' "$c_out"
     else
-      printf '%s\n' "$line"
+      printf '%s%s%s\n' "$c_in" "$line" "$c_out"
     fi
   done
+
+  if [ "$tty_mode" = "1" ]; then
+    tw_flush
+    tw_raw_off
+  fi
+  return 0
 }
 # footer_line <comando> <commento> — riga dei COMANDI UTILI con i '#' allineati
 # a colonna fissa. Il padding e' calcolato sulla lunghezza VISIBILE del comando
@@ -504,7 +642,9 @@ print_task() {
     die "manca README per $LAB_ID"
   fi
   hdr "LAB  $LAB_ID"
-  sed -e "s#${training_placeholder}#$TRAINING_ROOT#g" "$f" | print_plain_md | highlight_cmds | typewrite
+  local body
+  body=$(sed -e "s#${training_placeholder}#$TRAINING_ROOT#g" "$f")
+  printf '%s' "$body" | hc_render_text | print_plain_md | highlight_cmds | typewrite
   printf '\n'
   printf 'COMANDI UTILI\n' | typewrite -c
   footer_line 'lab task'  'rivedi consegna'
@@ -630,7 +770,7 @@ hardcade_use_help() {
     hardcade_game_over
   fi
   warn "AIUTO CONSUMATO — errore HARDCADE $used/3"
-  printf 'Vite rimaste: %s\n' "$(render_hardcade_lives)"
+  printf 'Errori rimasti: %s\n' "$(render_hardcade_errors)"
   printf 'Per questo lab l aiuto ora e disabilitato.\n\n'
   return 0
 }
@@ -644,12 +784,162 @@ hardcade_errors() {
   [ -f "$HARDCADE_STATE_DIR/errors" ] && cat "$HARDCADE_STATE_DIR/errors" || echo 0
 }
 
-render_hardcade_lives() {
+# Errori rimasti in HARDCADE (3 errori condivisi per sessione):
+# ⚪ = errore ancora disponibile, ❌ = errore gia' consumato.
+# Larghezza celle identica a render_lives (2 celle + spazio) per non
+# spostare la colonna TEMA nelle tabelle (finding F1).
+render_hardcade_errors() {
   local errors remaining
   errors="$(hardcade_errors)"
   remaining=$((3 - errors))
   [ "$remaining" -lt 0 ] && remaining=0
-  render_lives "$remaining" 3
+  render_hardcade_errors_cells "$remaining" 3
+}
+
+render_hardcade_errors_cells() {
+  local count="$1" max="${2:-3}" i str=""
+  for ((i=1; i<=max; i++)); do
+    if [ "$i" -le "$count" ]; then
+      str="${str}⚪ "
+    else
+      str="${str}❌ "
+    fi
+  done
+  printf '%s [%d/%d]' "$str" "$count" "$max"
+}
+
+# ---------------------------------------------------------------------------
+# MOTORE VARIANTI HARDCADE (WP3)
+# ---------------------------------------------------------------------------
+# Variante assegnata a un lab in una run hardcade (1..N) o 0 = BASE.
+hc_variant() {
+  local id="$1"
+  if [ -f "$HARDCADE_STATE_DIR/variant-$id" ]; then
+    cat "$HARDCADE_STATE_DIR/variant-$id"
+  else
+    echo 0
+  fi
+}
+
+# hc_use_variant <lab-id> <num> — esporta i valori V_* della variante scelta.
+# 0 = BASE canonica (idem standard/arcade). In HARDCADE il CLI lo chiama da
+# require_lab/hc_enter/hc_advance per ogni lab.
+hc_use_variant() {
+  local id="$1" num="${2:-0}"
+  eval "$(hcv_values "$id" "$num")"
+}
+
+# Rende un testo sostituendo i token @V_X@ con i valori correnti. Usato sui
+# testi README/hint/why che devono riflettere la variante attiva.
+variant_render() {
+  local text="$1"
+  local out="$text" var val
+  while IFS= read -r var; do
+    val="${!var:-}"
+    [ -n "$val" ] || continue
+    out="${out//@$var@/$val}"
+  done < <(compgen -v | grep '^V_' || true)
+  printf '%s' "$out"
+}
+
+# hc_render_text — come variant_render ma come FILTRO su stdin (per pipe).
+hc_render_text() {
+  variant_render "$(cat)"
+}
+
+# hc_render <file> — rende un file di testo (README/hint/why) con la variante |
+# oppure, in hardcade, crea una copia renderizzata in $HARDCADE_STATE_DIR/render/
+# e stampa la via (per non riposizionare i dati). In standard/arcade stampa la
+# via originale (nessuna sostituzione: i file base non hanno token @V_@).
+hc_render() {
+  local file="$1"
+  if ! is_hardcade; then
+    printf '%s' "$file"
+    return
+  fi
+  local rendered="$HARDCADE_STATE_DIR/render/$(basename "$file")"
+  variant_render "$(cat "$file")" > "$rendered"
+  printf '%s' "$rendered"
+}
+
+# Riga "posizione di lavoro" (path del lab) resa con la variante attiva.
+WORKDIR_HINT='${LAB_TRAINING_ROOT:-/workspace/training}'
+
+# Ordine lab di una run hardcade: shuffle (01..10), salvato in $HARDCADE_STATE_DIR/order.
+hc_shuffle() {
+  local ids=() id out=() i j tmp
+  while IFS= read -r id; do ids+=("$id"); done < <(lab_ids)
+  local n=${#ids[@]}
+  for (( i = 0; i < n; i++ )); do out[$i]="${ids[$i]}"; done
+  for (( i = n - 1; i > 0; i-- )); do
+    j=$(( RANDOM % (i + 1) ))
+    tmp="${out[$i]}"; out[$i]="${out[$j]}"; out[$j]="$tmp"
+  done
+  printf '%s ' "${out[@]}"
+}
+
+# Variante per lab (una sola scelta a run), persistita in variant-<id>.
+hc_choose_variant() {
+  local id="$1"
+  if [ -f "$HARDCADE_STATE_DIR/variant-$id" ]; then
+    cat "$HARDCADE_STATE_DIR/variant-$id"
+  else
+    local num
+    num=$(hcv_pick "$id")
+    echo "$num" > "$HARDCADE_STATE_DIR/variant-$id"
+    printf '%s' "$num"
+  fi
+}
+
+# hc_enter — all'avvio di una run HARDCADE: ordina, pesca varianti e parte
+# subito col primo lab (reset + consegna). Attiva le V_* per quel lab.
+hc_enter() {
+  ensure_state
+  local order
+  order=$(hc_shuffle)
+  echo "$order" > "$HARDCADE_STATE_DIR/order"
+  echo "1" > "$HARDCADE_STATE_DIR/pos"
+  local id num
+  # presente = prima voce dell'ordine
+  id=$(printf '%s' "$order" | awk '{print $1}')
+  num=$(hc_choose_variant "$id")
+  hc_use_variant "$id" "$num"
+  hdr "HARDCADE — lab 1"
+  printf 'Ordine di questa run (varianti diverse a ogni run):\n  %s\n\n' "$(printf '%s '  $(cat "$HARDCADE_STATE_DIR/order"))"
+  printf 'Variante attiva per %s: %s\n\n' "$(bold "$id")" "$num"
+  cmd_start "$id"
+}
+
+# hc_next — primo lab dell'ordine NON ancora completato; vuoto = tutti fatti.
+hc_next() {
+  local id
+  for id in $(cat "$HARDCADE_STATE_DIR/order" 2>/dev/null || true); do
+    if [ ! -f "$HARDCADE_STATE_DIR/done-$id" ]; then
+      printf '%s' "$id"
+      return
+    fi
+  done
+}
+
+# hc_advance — dopo un check OK, avanza automaticamente al prossimo lab (reset+
+# consegna) oppure dichiara VITTORIA della run quando non resta alcun lab.
+hc_advance() {
+  local nxt
+  nxt=$(hc_next)
+  if [ -z "$nxt" ]; then
+    # Tutti i lab completati: vittoria.
+    hdr "HARDCADE — RUN COMPLETATA"
+    printf 'Hai completato tutti i lab di questa run HARDCADE!\n'
+    printf 'Impossibile avere una percentuale di errori: 0 errori in %s lab.\n' "$(wc -w < "$HARDCADE_STATE_DIR/order")"
+    printf 'Modalita HARDCADE superata con brio.\n\n'
+    return 0
+  fi
+  local num
+  num=$(hc_choose_variant "$nxt")
+  hc_use_variant "$nxt" "$num"
+  hdr "HARDCADE — prossimo lab"
+  printf 'Variante attiva per %s: %s\n\n' "$(bold "$nxt")" "$num"
+  cmd_start "$nxt"
 }
 
 hardcade_banner() {
@@ -783,7 +1073,7 @@ ascii_rain() {
 
 # Fuochi d'artificio ASCII animati, mostrati al completamento di tutti i lab.
 # Quattro fasi: lancio dei razzi (dal basso verso l'alto con scia di scintille),
-# esplosioni in raggiera radiale simmetrica, pioggia di confetti, banner 9/9.
+# esplosioni in raggiera radiale simmetrica, pioggia di confetti, banner n/n.
 # Colori: rosso(31) verde(32) giallo(33) blu(34) magenta(35) ciano(36).
 ascii_fireworks() {
   [ -t 1 ] || return 0
@@ -847,6 +1137,129 @@ ascii_fireworks() {
   anim_leave
 }
 
+# Intro breve all'inizio della lezione (lab class): cornice con l'ID del lab e
+# una barra di caricamento che si riempie progressivamente. Disegnata sul buffer
+# alternato (nessun residuo) e inerte in non-TTY (la guardia [ -t 1 ] rende la
+# chiamata un no-op in pipe/QA/suite). Durata complessiva ~1.2 s.
+ascii_lesson() {
+  [ -t 1 ] || return 0
+  local lab="${1:-""}"
+  local cols rows by bx bw tx i bar_w used
+  cols=$(tput cols 2>/dev/null || echo 80)
+  rows=$(tput lines 2>/dev/null || echo 24)
+  cols=$((cols > 40 ? cols : 80))
+  rows=$((rows > 10 ? rows : 20))
+
+  anim_enter || return 0
+
+  bw=$((cols - 4)); [ "$bw" -gt 52 ] && bw=52
+  bx=$(((cols - bw) / 2)); [ "$bx" -lt 1 ] && bx=1
+  by=3
+  bar_w=$((bw - 4)); [ "$bar_w" -lt 10 ] && bar_w=10
+
+  # Cornice (top/bottom una volta sola, da qui in poi ridisegno solo la barra).
+  printf '\033[%d;%dH\033[33m%s%s%s\033[0m' "$by" "$bx" "$BX_TL" "$(printf '%*s' "$((bw - 2))" "" | tr ' ' "$BX_HB")" "$BX_TR"
+  printf '\033[%d;%dH\033[33m%s%s%s\033[0m' "$((by + 4))" "$bx" "$BX_BL" "$(printf '%*s' "$((bw - 2))" "" | tr ' ' "$BX_HB")" "$BX_BR"
+  for i in 1 2 3; do
+    printf '\033[%d;%dH\033[33m%s\033[0m' "$((by + i))" "$bx" "$BX_VB"
+    printf '\033[%d;%dH\033[33m%s\033[0m' "$((by + i))" "$((bx + bw - 1))" "$BX_VB"
+  done
+
+  # Titolo (centrato) e ID lab (grassetto, evidenziato).
+  tx=$((bx + (bw - 7) / 2))
+  printf '\033[%d;%dH\033[33mLEZIONE\033[0m' "$((by + 1))" "$tx"
+  printf '\033[%d;%dH\033[1;37m%s\033[0m' "$((by + 2))" "$((bx + 2))" "$lab"
+
+  # Barra di avanzamento: cresce da sinistra, ogni frame pulita prima di ridisegnare.
+  for i in $(seq 0 20); do
+    used=$((bar_w * i / 20))
+    printf '\033[%d;%dH\033[0m[%s%s]%3d%%\033[0m' "$((by + 3))" "$((bx + 2))" \
+      "$(printf '%*s' "$used" "" | tr ' ' '#')" \
+      "$(printf '%*s' "$((bar_w - used))" "" | tr ' ' ' ')" \
+      "$((i * 5))"
+    sleep 0.06
+  done
+
+  anim_leave
+}
+
+# Razzo ASCII in decollo: esempio di animazione "a frame incorporati" (Workflow B
+# della skill ascii-anim). Il razzo e' statico (in questo caso scritto a mano,
+# ma puo' provenire da una conversione chafa/img2txt di un asset); a moversi e'
+# la sua posizione sullo schermo. Ogni frame viene ripulito prima di ridisegnare,
+# con scia in dissolvenza sotto il razzo. ~1.5 s totali, TTY-only.
+ascii_rocket() {
+  [ -t 1 ] || return 0
+  local cols rows y x i clear_rows
+  cols=$(tput cols 2>/dev/null || echo 80)
+  rows=$(tput lines 2>/dev/null || echo 24)
+  cols=$((cols > 40 ? cols : 80))
+  rows=$((rows > 12 ? rows : 20))
+
+  # Frame statici del razzo (righe del corpo, centrate in colonna 3; la colonna
+  # di lancio x viene calcolata a runtime). Colori: corpo ciano, apertura rossa.
+  local f1=$'\033[1;36m   /\\   \033[0m'
+  local f2=$'\033[1;36m  /  \\  \033[0m'
+  local f3=$'\033[1;36m |    | \033[0m'
+  local f4=$'\033[1;37m|_/\\_|\033[0m'
+  local f5=$'\033[1;31m|_/\\_|\033[0m'
+  local f6=$'\033[1;33m|_/\\_|\033[0m'
+
+  anim_enter || return 0
+
+  for i in $(seq 0 8); do
+    y=$((rows - 6 - (i * (rows - 10) / 8)))
+    x=$((cols / 2 - 3)); [ "$x" -lt 1 ] && x=1
+
+    # Pulisci l'area del frame precedente (corpo 6 righe + scia), dall'alto.
+    for r in $(seq 0 9); do
+      local cy=$((y + r))
+      [ "$cy" -lt 1 ] && continue
+      [ "$cy" -gt "$rows" ] && continue
+      printf '\033[%d;%dH\033[0m       \033[0m' "$cy" "$x"
+    done
+
+    # Scia in dissolvenza sotto il razzo ('.' e '~', piu chiara ai lati).
+    local s=""
+    case $((i % 3)) in
+      0) s='~';;
+      1) s='.';;
+      2) s=':';;
+    esac
+    for r in 1 2 3; do
+      local sy=$((y + 5 + r))
+      [ "$sy" -ge 1 ] && [ "$sy" -le "$rows" ] && \
+        printf '\033[%d;%dH\033[0;36m%s%s%s\033[0m' "$sy" "$x" '.' "$s" '.'
+    done
+
+    # Corpo del razzo.
+    printf '\033[%d;%dH%s\n' "$y" "$x" "$f1"
+    printf '\033[%d;%dH%s\n' "$((y + 1))" "$x" "$f2"
+    printf '\033[%d;%dH%s\n' "$((y + 2))" "$x" "$f3"
+    printf '\033[%d;%dH%s\n' "$((y + 3))" "$x" "$f4"
+    printf '\033[%d;%dH%s\n' "$((y + 4))" "$x" "$f5"
+    printf '\033[%d;%dH%s\n' "$((y + 5))" "$x" "$f6"
+    sleep 0.09
+  done
+
+  # Esplosione finale in stella (pulisce l'area, nessun residuo).
+  local ey=$((rows - 8)); [ "$ey" -lt 2 ] && ey=2
+  for i in 0 1 2 3 4 5 6 7; do
+    for r in 0 1 2; do
+      local rx=$(( cols / 2 - 2 + (i % 5) - 2 + r * (i / 2) ))
+      local ry=$(( ey + (i % 3) - 1 ))
+      [ "$rx" -ge 1 ] && [ "$rx" -le "$cols" ] && [ "$ry" -ge 1 ] && [ "$ry" -le "$rows" ] && \
+        printf '\033[%d;%dH\033[1;3%dm*\033[0m' "$ry" "$rx" "$((1 + i % 6))"
+    done
+    sleep 0.05
+  done
+  for i in $(seq 0 7); do
+    printf '\033[%d;%dH\033[0m \033[0m' "$((ey + (i % 3) - 1))" "$(( cols / 2 - 2 + (i % 5) - 2 + 0 * (i / 2) ))"
+  done
+
+  anim_leave
+}
+
 # Completamento di TUTTI i lab: fuochi d'artificio + messaggio + reset su conferma.
 # Solo in modalita STANDARD (arcade ha il suo Game Over, hardcade e bloccato).
 congrats_all_done() {
@@ -906,6 +1319,9 @@ cmd_mode() {
       rm -f "$HARDCADE_STATE_DIR/active" "$HARDCADE_STATE_DIR/errors" \
             "$HARDCADE_STATE_DIR/help-used-"*
       rmdir "$HARDCADE_STATE_DIR" 2>/dev/null || true
+      # Torna al root di lavoro STANDARD (coerente coi processi successivi).
+      TRAINING_ROOT="/workspace/training"
+      export LAB_TRAINING_ROOT="$TRAINING_ROOT"
       ok "Uscita da HARDCADE: i progressi hardcade sono stati abbandonati."
       printf 'I tuoi lab STANDARD/ARCADE sono intatti. Riprendi con:  lab list\n\n'
       return 0
@@ -915,7 +1331,7 @@ cmd_mode() {
     printf 'Per uscire da HARDCADE e tornare al corso:  lab mode standard --exit\n'
     printf '\n'
     printf 'Giocatore: %s\n' "$(id -un 2>/dev/null || printf '?')"
-    printf 'Vite disponibili: %s\n\n' "$(render_hardcade_lives)"
+    printf 'Errori rimasti: %s\n\n' "$(render_hardcade_errors)"
     return 0
   fi
   if [ "$#" -eq 0 ]; then
@@ -929,9 +1345,14 @@ cmd_mode() {
     printf '  lab mode arcade     # -a   modalita arcade (sfida a 3 vite con cuori)\n\n'
     printf '  lab mode hardcade   # -hc  sfida segreta: si sblocca con una run ARCADE\n'
     printf '                      # perfetta (tutti i lab, 0 cuori persi)\n\n'
+    printf '  lab mode class      # lezioni narrate di tutti i lab (01 → 10)\n'
     return 0
   fi
   case "${1:-}" in
+    class|lessons|lezioni|--class)
+      shift || true
+      cmd_classes "$@"
+      ;;
     standard|std|classic|relax|-s|--standard)
       echo "standard" > "$STATE_DIR/mode"
       ok "Modalita impostata su STANDARD (tentativi illimitati, niente vite perse)"
@@ -958,11 +1379,20 @@ hardcade|-hc|--hardcade)
       mkdir -p "$HARDCADE_STATE_DIR"
       echo 1 > "$HARDCADE_STATE_DIR/active"
       echo 0 > "$HARDCADE_STATE_DIR/errors"
-      rm -f "$HARDCADE_STATE_DIR/done-"* "$HARDCADE_STATE_DIR/hint-"* "$HARDCADE_STATE_DIR/lives-"*
+      rm -f "$HARDCADE_STATE_DIR/done-"* "$HARDCADE_STATE_DIR/hint-"* "$HARDCADE_STATE_DIR/lives-"* \
+            "$HARDCADE_STATE_DIR/variant-"* "$HARDCADE_STATE_DIR/order" "$HARDCADE_STATE_DIR/pos"
       STATE_DIR="$HARDCADE_STATE_DIR"
+      # Root di lavoro separato per la run HARDCADE: i processi successivi
+      # (es. lab check) lo rilevano dall'active file; deve essere coerente
+      # anche per QUESTO processo (primo reset della run).
+      TRAINING_ROOT="/workspace/hardcade-training"
+      export LAB_TRAINING_ROOT="$TRAINING_ROOT"
       ok "Modalita HARDCADE attivata (3 errori condivisi per sessione)"
       printf 'Salvataggio separato: %s\n' "$HARDCADE_STATE_DIR"
-      printf 'La modalita e irreversibile per questa sessione.\n\n'
+      printf 'La modalita e irreversibile per questa sessione.\n'
+      printf 'Parte subito un esercizio di un lab con una VARIANTE diversa\n'
+      printf '(percorsi, file, utenti, pid, stringhe) e ordine dei lab casuale.\n\n'
+      hc_enter
       ;;
     *)
       die "modalita non riconosciuta: $1 (usa 'standard', 'arcade' o 'hardcade')"
@@ -973,6 +1403,7 @@ hardcade|-hc|--hardcade)
 render_lives() {
   local count="$1"
   local max="${2:-$MAX_LIVES}"
+  local compact="${3:-0}"
   local str=""
   for ((i=1; i<=max; i++)); do
     if [ "$i" -le "$count" ]; then
@@ -981,7 +1412,11 @@ render_lives() {
       str="${str}🖤 "
     fi
   done
-  printf '%s [%d/%d]' "$str" "$count" "$max"
+  if [ "$compact" = "1" ]; then
+    printf '%s' "$str"
+  else
+    printf '%s [%d/%d]' "$str" "$count" "$max"
+  fi
 }
 
 # Numero di hint disponibili in ARCADE: lampadine fixe (3).
@@ -1118,7 +1553,7 @@ cmd_list() {
   local tw
   tw=$(theme_col_width)
   if is_hardcade; then
-    printf "%-22s  %-6s  %-15s  %-${tw}s\n" "ID" "STATO" "VITE SESSIONE" "TEMA"
+    printf "%-22s  %-6s  %-15s  %-${tw}s\n" "ID" "STATO" "ERRORI SESSIONE" "TEMA"
   elif is_arcade; then
     printf "%-22s  %-6s  %-16s  %-12s  %-${tw}s\n" "ID" "STATO" "VITE" "INDIZI" "TEMA"
   else
@@ -1134,7 +1569,7 @@ cmd_list() {
     fi
     theme=$(cat "$LABS/$id/theme.txt" 2>/dev/null || printf '%s' "-")
     if is_hardcade; then
-      printf "%-22s  %-6s  %s%s\n" "$id" "$mark" "$(lives_col "$(render_hardcade_lives)")" "$(theme_str "$theme")"
+      printf "%-22s  %-6s  %s%s\n" "$id" "$mark" "$(lives_col "$(render_hardcade_errors)")" "$(theme_str "$theme")"
     elif is_arcade; then
       lives=$(get_lives "$id")
       hints=$(get_hints "$id")
@@ -1174,7 +1609,7 @@ cmd_start() {
   hr
   ok "lab $LAB_ID pronto"
   if is_hardcade; then
-    printf 'Vite iniziali/sessione: %s\n' "$(render_hardcade_lives)"
+    printf 'Errori iniziali/sessione: %s\n' "$(render_hardcade_errors)"
   elif is_arcade; then
     arcade_timer_start
     printf 'Vite iniziali: %s\n' "$(render_lives "$MAX_LIVES")"
@@ -1227,6 +1662,21 @@ didactic_feedback() {
 
 cmd_check() {
   require_lab "$@"
+
+  # F2: in HARDCADE la verifica e ammessa SOLO sul lab corrente della run
+  # (il prossimo non completato nell'ordine). Un check sul lab sbagliato
+  # avrebbe valutato valori BASE e consumato errore senza motivo.
+  if is_hardcade; then
+    local hc_current
+    hc_current=$(hc_next 2>/dev/null || true)
+    if [ -z "$hc_current" ]; then
+      die "run HARDCADE completata: nessun lab rimasto da verificare."
+    fi
+    if [ "$LAB_ID" != "$hc_current" ]; then
+      die "in HARDCADE puoi verificare solo il lab corrente: $hc_current (non $LAB_ID). Nessun errore consumato."
+    fi
+  fi
+
   safe_cwd
   hdr "CHECK  $LAB_ID"
 
@@ -1309,7 +1759,7 @@ cmd_check() {
       fi
     fi
     if is_hardcade; then
-      printf 'Vite disponibili: %s\n' "$(render_hardcade_lives)"
+      printf 'Errori rimasti: %s\n' "$(render_hardcade_errors)"
     elif is_arcade; then
       printf 'Vite finali: %s\n' "$(render_lives "$current_lives")"
       if [ "$arcade_bonus" -eq 1 ]; then
@@ -1318,11 +1768,14 @@ cmd_check() {
     fi
     if [ -f "$LAB/why.txt" ]; then
       hdr "PERCHE FUNZIONA"
-      cat "$LAB/why.txt" | typewrite
+      cat "$LAB/why.txt" | hc_render_text | typewrite
       printf '\n'
     fi
     printf 'Prossimo: lab list   oppure   lab start <altro-id>\n\n'
     congrats_all_done
+    if is_hardcade; then
+      hc_advance
+    fi
   else
     if is_hardcade; then
       local used=$((current_errors + 1))
@@ -1332,7 +1785,7 @@ cmd_check() {
         hardcade_game_over
       fi
       warn "check FALLITO — errore HARDCADE $used/3"
-      printf 'Vite rimaste: %s\n' "$(render_hardcade_lives)"
+      printf 'Errori rimasti: %s\n' "$(render_hardcade_errors)"
       printf 'I tuoi file NON sono stati cancellati.\n\n'
       exit "$status"
     fi
@@ -1423,9 +1876,9 @@ print_hint_block() {
           print content;
         }
       }
-    ' "$file" | typewrite
+    ' "$file" | hc_render_text | typewrite
   else
-    sed -n "${index}p" "$file" | typewrite
+    sed -n "${index}p" "$file" | hc_render_text | typewrite
   fi
 }
 
@@ -1449,9 +1902,9 @@ print_all_hints() {
         gsub(/^\n+|\n+$/, "", content);
         printf "\n--- [HINT %d] ----------------------------------\n%s\n", c, content;
       }
-    ' "$file" | typewrite
+    ' "$file" | hc_render_text | typewrite
   else
-    nl -ba "$file" | typewrite
+    nl -ba "$file" | hc_render_text | typewrite
   fi
 }
 
@@ -1469,6 +1922,20 @@ cmd_hint() {
     set -- "$cur"
   fi
   require_lab "$@"
+
+  # F2: stessa guardia di cmd_check — in HARDCADE l'aiuto e ammesso solo
+  # sul lab corrente della run, per non sprecare errori su un lab sbagliato.
+  if is_hardcade; then
+    local hc_current
+    hc_current=$(hc_next 2>/dev/null || true)
+    if [ -z "$hc_current" ]; then
+      die "run HARDCADE completata: nessun lab rimasto da aiutare."
+    fi
+    if [ "$LAB_ID" != "$hc_current" ]; then
+      die "in HARDCADE puoi chiedere aiuto solo per il lab corrente: $hc_current (non $LAB_ID). Nessun errore consumato."
+    fi
+  fi
+
   shift || true
   local mode="next"
   case "${1:-}" in
@@ -1595,6 +2062,47 @@ cmd_hint() {
   fi
 }
 
+# --- lab mode class: lezioni di TUTTI i lab, esposte nell'ordine dei lab ------
+# Index 01→10; selezioni un lab e parte la narrazione dei suoi argomenti
+# (flusso cmd_class). Non dipende dalla modalita corrente.
+cmd_classes() {
+  ensure_state
+  hdr "LEZIONI  (lab mode class)"
+  printf 'Tutte le lezioni, nell ordine dei lab (01 → 10).\n'
+  printf 'Scegli un lab per ascoltare gli argomenti narrati.\n'
+  printf '\n'
+  local ids=() i=0 id theme na
+  while IFS= read -r id; do
+    ids+=("$id")
+  done < <(lab_ids)
+  local total=${#ids[@]}
+  for (( i=0; i<total; i++ )); do
+    id="${ids[$i]}"
+    theme=$(cat "$LABS/$id/theme.txt" 2>/dev/null || printf '%s' "-")
+    na=$(grep -c '^ARGOMENTO:' "$LABS/$id/class.txt" 2>/dev/null || printf '%s' "0")
+    printf '  %s  %s%-28s%s  %s\n' "$(cmd "[$((i+1))]")" "$(bold "$id")" "" "" "$([ "$na" -gt 0 ] && printf '%s' "$theme · $na argomenti" || printf '%s' "$theme")"
+  done
+  printf '\n'
+  printf '  [0] = esci, [invio] = esci\n'
+  while true; do
+    printf 'Scegli un lab [1-%s, 0 = esci] > ' "$total"
+    local scelta
+    read -r scelta || scelta="0"
+    case "${scelta:-0}" in
+      0|"") printf '\n'; return 0 ;;
+      *[!0-9]*|0) printf '  Scelta non valida. Riprova.\n' ;;
+      *)
+        if [ "$scelta" -ge 1 ] 2>/dev/null && [ "$scelta" -le "$total" ]; then
+          cmd_class "${ids[$((scelta-1))]}"
+          printf '\n'
+        else
+          printf '  Scelta non valida. Riprova.\n'
+        fi
+        ;;
+    esac
+  done
+}
+
 # --- class: lezione narrata interattiva sugli argomenti di un lab -------------
 # LAB_TYPE_CLASS (default 0.03) controlla la velocita' di battitura del testo.
 #
@@ -1649,27 +2157,30 @@ cmd_class() {
 
   # Titolo
   hdr "LEZIONE: $LAB_ID"
+  # Intro animata breve (inerte in non-TTY grazie alla guardia [ -t 1 ]).
+  ascii_lesson "$LAB_ID"
   printf 'Argomenti: %s\n\n' "$(IFS=', '; echo "${names[*]}")"
-  # Micro-guida per il principiante: INVIO accelera la battitura (salta alla
-  # frase successiva). Mostrata solo su terminale interattivo (in non-TTY è
-  # rumore inutile).
+  # Micro-guida per il principiante: durante la dettatura i soli tasti con
+  # effetto sono INVIO e SPAZIO (completano subito la frase corrente); gli
+  # altri tasti sono ignorati. Mostrata solo su terminale interattivo (in
+  # non-TTY e' rumore inutile).
   if [ -t 0 ]; then
-    printf '\033[1;33mPremi INVIO per saltare subito alla frase successiva.\033[0m\n'
-    printf '\033[1;33mA ogni argomento: [0] continua · [1..%d] riassunto.\033[0m\n\n' "$total"
+    printf '\033[33mPremi INVIO o SPAZIO per completare subito la frase (gli altri tasti sono ignorati).\033[0m\n'
+    printf '\033[33mA ogni argomento: [0] continua · [1..%d] riassunto.\033[0m\n\n' "$total"
   fi
 
   # Per ogni argomento
   local i
   for (( i=0; i<total; i++ )); do
-    printf '\n\033[1;36m--- ARGOMENTO %d/%d: %s ---\033[0m\n' \
+    printf '\n\033[33m--- ARGOMENTO %d/%d: %s ---\033[0m\n' \
       "$((i+1))" "$total" "${names[$i]}"
-    # Testo narrato con battitura
-    printf '%s\n' "${narrs[$i]}" | typewrite
+    # Testo narrato con battitura (voce del terminale/root: giallo opaco)
+    printf '%s\n' "${narrs[$i]}" | LAB_TYPE_SPEAKER=Root typewrite
     printf '\n'
 
     # Menu interattivo "Ci sono dubbi?"
     while true; do
-      printf '\033[1;33m  Ci sono dubbi?\033[0m\n'
+      printf '\033[33m  Ci sono dubbi?\033[0m\n'
       # Costruisce la riga singola del menu; se supera le 76 colonne visibili
       # (terminali 80-col, lab con molti argomenti) stampa le opzioni in colonna.
       # NOTA: la versione "visibile" (plain) viene costruita senza codici ANSI
@@ -1710,7 +2221,7 @@ cmd_class() {
       elif [ "$choice" -ge 1 ] && [ "$choice" -le "$total" ] 2>/dev/null; then
         local idx=$((choice-1))
         printf '\n\033[1;35m--- RIASSUNTO: %s ---\033[0m\n' "${names[$idx]}"
-        printf '%s\n' "${riasss[$idx]}" | typewrite
+        printf '%s\n' "${riasss[$idx]}" | LAB_TYPE_SPEAKER=Root typewrite
         printf '\n'
       else
         printf '  Scelta non valida. Riprova.\n'
@@ -1745,6 +2256,12 @@ cmd_solution() {
   fi
   hdr "SOLUTION  $LAB_ID"
   printf 'Leggi, non copiare a occhio chiuso.\n'
+  # In HARDCADE la soluzione va letta con la variante attiva in testa:
+  # i pattern tipo ${V_DIR:-...} nel testo corrispondono ai valori correnti.
+  if is_hardcade; then
+    printf 'Variante attiva: %s  ·  ' "$(bold "$(hc_variant "$LAB_ID")")"
+    printf 'V_DIR=%s V_USER=%s\n' "${V_DIR:-}" "${V_USER:-}"
+  fi
   hr
   grep -v '^lab check' "$LAB/solution.sh" || true
   printf '\n'
@@ -1780,9 +2297,9 @@ cmd_status() {
   local tw
   tw=$(theme_col_width)
   if is_hardcade; then
-    printf "%-22s  %-6s  %-15s  %-${tw}s  %s\n" "ID" "STATO" "VITE SESSIONE" "TEMA" "COMPLETATO"
+    printf "%-22s  %-6s  %-15s  %-${tw}s  %s\n" "ID" "STATO" "ERRORI SESSIONE" "TEMA" "COMPLETATO"
   elif is_arcade; then
-    printf "%-22s  %-6s  %-16s  %-12s  %-${tw}s  %s\n" "ID" "STATO" "VITE" "INDIZI" "TEMA" "COMPLETATO"
+    printf "%-18s %-6s %-10s %-10s %-${tw}s %s\n" "ID" "STATO" "VITE" "INDIZI" "TEMA" "COMPLETATO"
   else
     printf "%-22s  %-6s  %-${tw}s  %s\n" "ID" "STATO" "TEMA" "COMPLETATO"
   fi
@@ -1792,17 +2309,17 @@ cmd_status() {
     theme=$(cat "$LABS/$id/theme.txt" 2>/dev/null || printf '%s' "-")
     if is_hardcade; then
       if is_done "$id"; then
-        printf "%-22s  %-6s  %s%-${tw}s  %s\n" "$id" "DONE" "$(lives_col "$(render_hardcade_lives)")" "$(theme_str "$theme")" "$(cat "$STATE_DIR/done-$id")"
+        printf "%-22s  %-6s  %s%-${tw}s  %s\n" "$id" "DONE" "$(lives_col "$(render_hardcade_errors)")" "$(theme_str "$theme")" "$(cat "$STATE_DIR/done-$id")"
       else
-        printf "%-22s  %-6s  %s%-${tw}s  %s\n" "$id" "TODO" "$(lives_col "$(render_hardcade_lives)")" "$(theme_str "$theme")" "-"
+        printf "%-22s  %-6s  %s%-${tw}s  %s\n" "$id" "TODO" "$(lives_col "$(render_hardcade_errors)")" "$(theme_str "$theme")" "-"
       fi
     elif is_arcade; then
       lives=$(get_lives "$id")
       hints=$(get_hints "$id")
       if is_done "$id"; then
-        printf "%-22s  %-6s  %-16s  %-12s  %-${tw}s  %s\n" "$id" "DONE" "$(render_lives "$lives")" "$(render_hints "$hints") [$hints/$MAX_HINTS]" "$(theme_str "$theme")" "$(cat "$STATE_DIR/done-$id")"
+        printf "%-18s %-6s %-10s %-10s %-${tw}s %s\n" "$id" "DONE" "$(render_lives "$lives" "" 1)" "$(render_hints "$hints")" "$(theme_str "$theme")" "$(cat "$STATE_DIR/done-$id")"
       else
-        printf "%-22s  %-6s  %-16s  %-12s  %-${tw}s  %s\n" "$id" "TODO" "$(render_lives "$lives")" "$(render_hints "$hints") [$hints/$MAX_HINTS]" "$(theme_str "$theme")" "-"
+        printf "%-18s %-6s %-10s %-10s %-${tw}s %s\n" "$id" "TODO" "$(render_lives "$lives" "" 1)" "$(render_hints "$hints")" "$(theme_str "$theme")" "-"
       fi
     else
       if is_done "$id"; then
@@ -1903,14 +2420,20 @@ cmd_anim() {
   case "$nome" in
     fireworks|arti|fuochi) ascii_fireworks ;;
     rain|matrix|hardcade)  ascii_rain ;;
+    lesson|lez|class)      ascii_lesson ;;
+    rocket|razzo)          ascii_rocket ;;
     all|""|--all|-a)
+      hdr "ANIM  lesson"
+      ascii_lesson
+      hdr "ANIM  rocket"
+      ascii_rocket
       hdr "ANIM  fireworks"
       ascii_fireworks
       hdr "ANIM  rain"
       ascii_rain
       ;;
     *)
-      die "animazione sconosciuta: $nome (usa fireworks, rain o all)"
+      die "animazione sconosciuta: $nome (usa lesson, rocket, fireworks, rain o all)"
       ;;
   esac
   printf '\n'
@@ -1937,7 +2460,7 @@ case "${1:-}" in
   help|--help)       usage ;;
   version|--version) printf 'lab %s\n' "$VERSION" ;;
   "")
-    printf '%s\n' "$(welcome)"
+    welcome
     ;;
   *)
     warn "comando sconosciuto: ${1:-}"

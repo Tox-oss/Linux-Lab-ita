@@ -102,6 +102,7 @@ Le skill vivono in `.opencode/skills/<nome>/SKILL.md`. Ogni agente le carica con
 | `shell-code-recon` | Nux, Graph | quando serve capire cosa fa uno script `.sh` prima di verificarne/correggerne il contenuto |
 | `cli-survey` | Graph, Nux, Lim | prima di invocare/analizzare il CLI `lab` (subcomandi, modalita, LAB_QA_MODE, stato su disco) |
 | `lab-structure-map` | tutti | per orientarsi nella struttura dei lab (consegna, check, helper, suite) senza rileggerli |
+| `ascii-anim` | autore di animazioni | quando serve scrivere/incorporare animazioni ASCII nel corso (workflow procedurale o conversione asset→frame ANSI a tempo di authoring) |
 
 ## Versionamento automatico
 

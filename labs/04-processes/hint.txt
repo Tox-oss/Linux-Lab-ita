@@ -7,28 +7,28 @@
 • Un job id come [1] appartiene alla shell; il PID è il numero assegnato dal kernel. 'jobs' mostra i job della shell, 'ps' i processi.
 ---
 [STRATEGIA & ATTENZIONE ALLA SUBSHELL]
-• Posizione di lavoro: assicurati di trovarti in '/workspace/training/process-lab' (usa 'pwd').
+• Posizione di lavoro: assicurati di trovarti in '/workspace/training/@V_DIR@' (usa 'pwd').
 • Insidia tipica della shell:
-  Se scrivi su una sola riga 'cd ... && sleep 3600 &', il carattere '&' applica il background all'intera sequenza creando una subshell: '$!' punterebbe alla subshell temporanea e non al processo sleep.
-• Regola d'oro: entra prima nella cartella di lavoro, lancia 'sleep 3600 &' come istruzione a sé e subito dopo salva '$!' nel file 'worker.pid'. Salvalo prima di un altro background job.
+  Se scrivi su una sola riga 'cd ... && sleep @V_SLEEP@ &', il carattere '&' applica il background all'intera sequenza creando una subshell: '$!' punterebbe alla subshell temporanea e non al processo sleep.
+• Regola d'oro: entra prima nella cartella di lavoro, lancia 'sleep @V_SLEEP@ &' come istruzione a sé e subito dopo salva '$!' nel file '@V_PID@'. Salvalo prima di un altro background job.
 ---
 [COMANDI GUIDATI & ALTERNATIVE]
 1. Avvio processo in background e cattura PID:
-   sleep 3600 &
-   echo $! > worker.pid
+   sleep @V_SLEEP@ &
+   echo $! > @V_PID@
 
 2. Scrittura del file di stato (entrambi i metodi sono validi):
-   printf 'running\n' > status.txt
+   printf '@V_TEXT@\n' > @V_STATUS@
    oppure:
-   echo 'running' > status.txt
+   echo '@V_TEXT@' > @V_STATUS@
 ---
 [VERIFICA MANUALE AUTONOMA]
 Prima di lanciare 'lab check 04-processes', ispeziona il processo in esecuzione:
 • Mostra le informazioni dettagliate sul PID salvato:
-  ps -p "$(cat worker.pid)" -o pid,user,comm,args,stat
+  ps -p "$(cat @V_PID@)" -o pid,user,comm,args,stat
 • Test di esistenza non distruttivo con segnale 0:
-  kill -0 "$(cat worker.pid)" 2>/dev/null && echo "Processo attivo e raggiungibile!"
+  kill -0 "$(cat @V_PID@)" 2>/dev/null && echo "Processo attivo e raggiungibile!"
   (kill -0 verifica il processo e non lo termina.)
 • Controlla il file di stato:
-  cat status.txt
-• Dopo il check, se vuoi pulire il worker del laboratorio: kill "$(cat worker.pid)".
+  cat @V_STATUS@
+• Dopo il check, se vuoi pulire il worker del laboratorio: kill "$(cat @V_PID@)".

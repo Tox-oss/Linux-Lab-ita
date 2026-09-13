@@ -1,4 +1,4 @@
-# Assisted Linux Labs — immagine da Alpine Linux (musl); tag 3.24 (minor series) pinnato.
+# Assisted Linux Labs - immagine da Alpine Linux (musl); tag 3.24 (minor series) pinnato.
 # L'obiettivo e' un'immagine piu' piccola e veloce di Ubuntu, mantenendo la
 # stessa esperienza: CLI, 10 lab, man page localizzate.
 
@@ -82,15 +82,22 @@ COPY README.md /opt/assisted-labs/README.md
 # Configurazione shell di sistema: banner di benvenuto e completamento tab di 'lab'.
 COPY startup-banner.sh /etc/profile.d/assisted-labs.sh
 COPY bin/lab-completion.bash /etc/bash_completion.d/lab
+# Entrypoint: prepara il sistema (daemon di log per lab 08) a ogni avvio.
+COPY docker-entrypoint.sh /usr/local/bin/assisted-labs-entrypoint.sh
 
 # Rendi eseguibili i tool del lab e crea il symlink 'lab' nel PATH di sistema
 # (eseguito DOPO i COPY; i file dei lab sono gia' eseguibili ma per sicurezza).
 RUN chmod +x /opt/assisted-labs/bin/lab \
  && chmod +x /opt/assisted-labs/bin/intro.sh \
+ && chmod +x /usr/local/bin/assisted-labs-entrypoint.sh \
  && find /opt/assisted-labs/labs -name '*.sh' -exec chmod +x {} + \
- && ln -sfn /opt/assisted-labs/bin/lab /usr/local/bin/lab \
- && printf '%%wheel ALL=(ALL) ALL\n' > /etc/sudoers.d/wheel \
- && chmod 440 /etc/sudoers.d/wheel
+ && ln -sfn /opt/assisted-labs/bin/lab /usr/local/bin/lab
+
+# Utente di supporto non-root (auditor) + sudo per il gruppo wheel:
+# l'intro crea l'utente e lo invita a loggarsi con su - <nome>; lab 08 richiede sudo.
+RUN printf '%%wheel ALL=(ALL) ALL\n' > /etc/sudoers.d/wheel \
+ && chmod 440 /etc/sudoers.d/wheel \
+ && useradd -m -s /bin/bash auditor
 
 # Area di lavoro dei lab + caricamento del banner nelle shell interattive.
 # Su Alpine bash legge /etc/bash/bashrc (non /etc/bash.bashrc).
@@ -101,3 +108,5 @@ RUN mkdir -p /workspace/training \
 WORKDIR /workspace
 # Shell di default per chi entra nel container senza comandi.
 CMD ["bash"]
+# L'entrypoint prepara l'ambiente (syslogd + messaggio lab 08) poi esegue il CMD.
+ENTRYPOINT ["/usr/local/bin/assisted-labs-entrypoint.sh"]

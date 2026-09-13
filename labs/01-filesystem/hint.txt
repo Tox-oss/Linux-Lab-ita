@@ -1,6 +1,6 @@
 [CONCETTO] Gerarchia del Filesystem e Operazioni Base
 • In Linux ogni file e directory fa parte di un unico albero gerarchico con radice in '/'.
-• 'mkdir' crea directory; con il flag '-p' (parents) crea l'intero percorso annidato (es. project/docs) senza errori se la cartella genitore non esiste ancora.
+• 'mkdir' crea directory; con il flag '-p' (parents) crea l'intero percorso annidato (es. @V_MAIN@/@V_DOCS@) senza errori se la cartella genitore non esiste ancora.
 • 'mv' (move) sposta o rinomina file/cartelle (aggiorna la voce nel filesystem senza ricopiare i blocchi di dati).
 • 'cp' (copy) crea un duplicato indipendente dei contenuti.
 • 'rm' (remove) rimuove definitivamente i file (in ambiente CLI non esiste un cestino di ripristino).
@@ -8,41 +8,41 @@
 • Prima di rimuovere qualcosa, usa 'pwd' e 'ls' per verificare il percorso.
 ---
 [STRATEGIA & ATTENZIONE AI PERCORSI]
-• Posizione di lavoro: verifica di trovarti nella cartella dell'esercizio con 'pwd' (atteso: /workspace/training/fs-lab).
+• Posizione di lavoro: verifica di trovarti nella cartella dell'esercizio con 'pwd' (atteso: /workspace/training/@V_DIR@).
 • Struttura finale attesa:
-  project/
-  ├── data.txt
-  ├── docs/data.backup
-  └── notes.txt
+  @V_MAIN@/
+  ├── @V_DATA@
+  ├── @V_DOCS@/@V_BACKUP@
+  └── @V_NOTES@
 • Ordine logico consigliato:
-  1. Crea la cartella annidata 'project/docs' usando 'mkdir -p'.
-  2. Crea il file 'project/notes.txt' con il testo richiesto.
-  3. Sposta 'inbox/raw.txt' trasformandolo in 'project/data.txt' (con mv, non cp).
-  4. Crea il backup copiando 'project/data.txt' in 'project/docs/data.backup'.
-  5. Elimina 'temp.tmp' per ripulire l'ambiente.
-• Attenzione: usa percorsi relativi rispetto a fs-lab. Evita di creare cartelle direttamente in /workspace!
+  1. Crea la cartella annidata '@V_MAIN@/@V_DOCS@' usando 'mkdir -p'.
+  2. Crea il file '@V_MAIN@/@V_NOTES@' con il testo richiesto.
+  3. Sposta '@V_INBOX@/@V_RAW@' trasformandolo in '@V_MAIN@/@V_DATA@' (con mv, non cp).
+  4. Crea il backup copiando '@V_MAIN@/@V_DATA@' in '@V_MAIN@/@V_DOCS@/@V_BACKUP@'.
+  5. Elimina '@V_TEMP@' per ripulire l'ambiente.
+• Attenzione: usa percorsi relativi rispetto a @V_DIR@. Evita di creare cartelle direttamente in /workspace!
 ---
 [COMANDI GUIDATI & ALTERNATIVE]
 1. Creazione directory:
-   mkdir -p project/docs
+   mkdir -p @V_MAIN@/@V_DOCS@
 
 2. Creazione file di testo (entrambi i metodi sono validi):
-   printf 'filesystem lab\n' > project/notes.txt
+   printf '@V_TEXT@\n' > @V_MAIN@/@V_NOTES@
    oppure:
-   echo 'filesystem lab' > project/notes.txt
+   echo '@V_TEXT@' > @V_MAIN@/@V_NOTES@
 
 3. Spostamento, copia e pulizia (controlla prima la sorgente; non usare rm -rf):
-   mv inbox/raw.txt project/data.txt
-   cp project/data.txt project/docs/data.backup
-   rm temp.tmp
+   mv @V_INBOX@/@V_RAW@ @V_MAIN@/@V_DATA@
+   cp @V_MAIN@/@V_DATA@ @V_MAIN@/@V_DOCS@/@V_BACKUP@
+   rm @V_TEMP@
 ---
 [VERIFICA MANUALE AUTONOMA]
 Prima di lanciare 'lab check 01-filesystem', controlla il tuo operato:
 • Ispeziona la struttura creata:
-  ls -la project project/docs
+  ls -la @V_MAIN@ @V_MAIN@/@V_DOCS@
 • Verifica il contenuto del file notes.txt:
-  cat project/notes.txt
+  cat @V_MAIN@/@V_NOTES@
 • Verifica l'identità del backup con 'cmp':
-  cmp project/data.txt project/docs/data.backup && echo "Backup integro!"
+  cmp @V_MAIN@/@V_DATA@ @V_MAIN@/@V_DOCS@/@V_BACKUP@ && echo "Backup integro!"
 • Verifica che i file sorgenti/temporanei siano stati rimossi:
-  ls inbox/raw.txt temp.tmp 2>/dev/null || echo "File temporanei puliti correttamente"
+  ls @V_INBOX@/@V_RAW@ @V_TEMP@ 2>/dev/null || echo "File temporanei puliti correttamente"

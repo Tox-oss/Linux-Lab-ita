@@ -27,6 +27,12 @@ docker run --rm -it \
 
 Entri in una shell bash. Appare il banner di benvenuto.
 
+Al primo accesso ti viene chiesto di scegliere un nome (minuscole, numeri e
+`_`): crei così il tuo **profilo utente** e da quel momento lavori come
+quell'utente, **non più come root**. Quando un comando richiede davvero i
+pieni poteri, lo precedi con `sudo` e usi la password di prova che ti
+comunica l'intro all'atto della creazione (il tuo nome + `pass`).
+
 **Prima azione**: digita `lab list` per vedere i laboratori disponibili.
 
 > Nota: se digiti solo `lab` senza argomenti, si apre il menu di scelta della
@@ -94,8 +100,8 @@ Prima di lanciarti sui comandi puoi seguire una **lezione narrata** per ogni lab
 Come funziona:
 
 - Il testo scorre con l'effetto battitura (velocità dedicata, default **0.03**
-  s/car). In qualsiasi momento **INVIO** salta subito alla frase successiva:
-  non devi aspettare la fine.
+  s/car). In qualsiasi momento **INVIO** o **SPAZIO** saltano subito alla frase
+  successiva: non devi aspettare la fine.
 - Dopo ogni argomento la lezione chiede **«Ci sono dubbi?»** e proponi il menu:
   - **`[0]`** → continui con l'argomento successivo (la lezione **non è imposta**);
   - **`[N]`** → apro la versione **riassuntiva** dell'argomento scelto;
@@ -104,10 +110,16 @@ Come funziona:
   stampate **in colonna** invece che su una riga, per restare leggibili anche
   su terminale 80-col.
 
-Colori: titolo/header **cyan**, domanda «Ci sono dubbi?» **gialla** con
-argomento corrente del menu **verde**, riassunto **magenta** — coerenti con le
-regole colori del corso (magenta = comandi da digitare, verde = "ok/prosegui",
-giallo = domanda/output, ciano = titoli).
+Colori: la narrazione è un dialogo tra due personaggi — **Root** (etichetta
+«Root:» in giallo opaco 33, testo del dialogo nel colore normale del terminale)
+e il **giocatore atteso** (etichetta «Utente:» in blu). Le righe di struttura
+restano **senza etichetta**: heading della lezione e domanda «Ci sono dubbi?»
+in giallo opaco (33), argomento corrente del menu in **verde**, riassunto in
+**magenta** — coerenti con le regole colori del corso (magenta = comandi da
+digitare, verde = "ok/prosegui", giallo brillante = output dei comandi,
+giallo opaco = ciò che dice il sistema, ciano = titoli). L'intro e il banner
+adottano lo stesso giallo opaco per definire Root come personaggio che parla
+all'utente (battute attese dell'utente in blu).
 
 Il contenuto delle lezioni vive in `labs/<id>/class.txt`, formato
 `ARGOMENTO:` / `NARRAZIONE:` / `RIASSUNTO:` (i nomi non contengono virgole; testo
@@ -158,7 +170,7 @@ i lab in ordine (01 → 09).
 
 **Arcade** e **hardcade** sono un **gioco opzionale nascosto**, separato dallo
 studio standard. Non serve giocarci per completare il corso: è un divertimento
-per chi, dopo aver finito i 9 lab, vuole mettersi alla prova.
+per chi, dopo aver finito i 10 lab, vuole mettersi alla prova.
 
 - **`lab mode arcade`** — sfida a 3 vite (❤️ ❤️ ❤️): ogni errore costa un cuore;
   se finisci le vite parte il "Game Over". Mette alla prova le conoscenze già
@@ -167,7 +179,7 @@ per chi, dopo aver finito i 9 lab, vuole mettersi alla prova.
   più caro — **il primo `lab hint` è gratuito, dal secondo in poi ogni indizio
   costa 1 vita** (`lab hint <id> --all` è bloccato in questa modalità).
 - **HARDCADE è un secondo easter egg, ancora più nascosto**: si sblocca solo
-  completando **tutti i 9 lab in modalità ARCADE senza mai perdere un cuore**
+  completando **tutti i 10 lab in modalità ARCADE senza mai perdere un cuore**
   (run perfetta). Al primo accesso appare un'intro ASCII "matrix rain".
   Puoi sbloccarlo in ogni momento a scopo dimostrativo con
   `LAB_EH_UNLOCK=1 lab mode hardcade` oppure `lab mode hardcade --force`.
@@ -177,7 +189,8 @@ per chi, dopo aver finito i 9 lab, vuole mettersi alla prova.
   consultazione di `lab hint` o `lab solution` consuma 1 errore e disabilita
   l'aiuto per quel lab (OTK). Al terzo errore i progressi Hardcade vengono
   azzerati, il terminale viene chiuso e la prossima esecuzione di `lab`
-  riparte in **modalità standard** (i tuoi lab STANDARD/ARCADE restano intatti:
+  riparte nella **modalità precedente (STANDARD o ARCADE)** (i tuoi lab
+  STANDARD/ARCADE restano intatti:
   lo stato vive sul volume persistente, non nel container).
 - **Uscita da HARDCADE**: non si cambia modalità dal menu, ma si esce in
   qualsiasi momento con **`lab mode standard --exit`** — i progressi
@@ -187,12 +200,12 @@ per chi, dopo aver finito i 9 lab, vuole mettersi alla prova.
   Si cambia modalità con `lab mode <nome>` (es. `lab mode arcade`), ma per seguire
   il corso ti basta e ti avanza la modalità **standard**.
 
-## Effetto di fine corso (9 su 9)
+## Effetto di fine corso (10 su 10)
 
-Quando completi tutti i 9 lab, il `lab check` dell'ultimo esercizio mostra
+Quando completi tutti i 10 lab, il `lab check` dell'ultimo esercizio mostra
 l'effetto di fine corso: **fuochi d'artificio ASCII multicolore** (razzi che
 salgono dal basso ed esplodono in raggiere radiali + pioggia di confetti) e il
-banner **"COMPLETATI 9/9 LABORATORI!"**,
+banner **"COMPLETATI 10/10 LABORATORI!"**,
 seguiti dalla schermata di **congratulazioni** con la scelta di ripartire da
 zero o continuare.
 

@@ -14,34 +14,34 @@
 • Su una directory: r elenca i nomi, w crea/rimuove voci, x permette di attraversarla e accedere agli elementi.
 ---
 [STRATEGIA & BEST PRACTICES]
-• Posizione di lavoro: assicurati di trovarti in '/workspace/training/perms-lab' (usa 'pwd').
+• Posizione di lavoro: assicurati di trovarti in '/workspace/training/@V_DIR@' (usa 'pwd').
 • Per aggiungere il bit di esecuzione senza modificare gli altri bit usa 'chmod a+x'; non è sempre equivalente a impostare 755.
 • Per impostare permessi rigidi e precisi (come 600 per file privati o 775 per cartelle condivise), la notazione numerica 'chmod <modo> <bersaglio>' è la più rapida e sicura.
-• Crea la cartella prima di impostarne i permessi e scrivervi all'interno il file README.txt.
+• Crea la cartella prima di impostarne i permessi e scrivervi all'interno il file @V_DBOX_README@.
 ---
 [COMANDI GUIDATI & ALTERNATIVE]
 1. Bit eseguibile per tutti:
-   chmod a+x scripts/run.sh
-   (valide anche: chmod +x scripts/run.sh  oppure  chmod 755 scripts/run.sh)
+   chmod a+x @V_SCRIPTS@/@V_SCRIPT@
+   (valide anche: chmod +x @V_SCRIPTS@/@V_SCRIPT@  oppure  chmod 755 @V_SCRIPTS@/@V_SCRIPT@)
 
 2. File privato (solo proprietario):
-   chmod 600 private.txt
+   chmod 600 @V_PRIVATE@
 
 3. Creazione directory e permessi di gruppo:
-   mkdir -p dropbox
-   chmod 775 dropbox
+   mkdir -p @V_DROPBOX@
+   chmod 775 @V_DROPBOX@
 
 4. Scrittura del file nel posto corretto:
-   printf 'permissions matter\n' > dropbox/README.txt
+   printf '@V_TEXT@\n' > @V_DROPBOX@/@V_DBOX_README@
    oppure:
-   echo 'permissions matter' > dropbox/README.txt
+   echo '@V_TEXT@' > @V_DROPBOX@/@V_DBOX_README@
 Nota di sicurezza: controlla sempre il percorso con pwd e ls; non usare chmod -R in questo esercizio.
 ---
 [VERIFICA MANUALE AUTONOMA]
 Prima di eseguire 'lab check 02-permissions', verifica le modalità con 'stat' o 'ls':
 • Controlla i permessi in formato ottale e simbolico:
-  stat -c '%a %A %n' scripts/run.sh private.txt dropbox
+  stat -c '%a %A %n' @V_SCRIPTS@/@V_SCRIPT@ @V_PRIVATE@ @V_DROPBOX@
 • Ispeziona il contenuto del file creato:
-  cat dropbox/README.txt
+  cat @V_DROPBOX@/@V_DBOX_README@
 • Test rapido di esecuzione:
-  ./scripts/run.sh
+  ./@V_SCRIPTS@/@V_SCRIPT@

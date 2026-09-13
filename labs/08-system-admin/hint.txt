@@ -5,42 +5,43 @@
   didattico si puo solo ispezionare il client, non gestire servizi reali).
 * il log di sistema usa syslogd/logger: i messaggi finiscono in /var/log/messages.
 * 'sudo -u utente comando' esegue un comando con l'identita di un altro utente.
-* 'crontab file' installa una tabella cron; 'crontab -l' la mostra.
+* 'crontab file' installa una tabella cron; 'crontab -l' la mostra. In questo
+  container (crontab busybox senza suid) servono con 'sudo'.
 ---
 [STRATEGIA & BEST PRACTICES]
-* Non provare ad avviare servizi via init in questo container: OpenRC non e PID 1.
+* Non provare ad avviare servizi via init in questo container: OpenRC non e' PID 1.
 * Per 'top', usa modalita batch e una sola iterazione, altrimenti il comando resta aperto.
 * Non avviare tu syslogd: e' gia' attivo dal reset (il messaggio con l'etichetta
-  assisted-lab e' gia' nel log, devi solo recuperarlo con grep).
-* Installa esattamente il file nightly.cron gia preparato dal reset.
-* Dopo aver installato la crontab, salva l'output con 'crontab -l > installed_cron.txt'.
+  @V_LOG_TAG@ e' gia' nel log, devi solo recuperarlo con grep).
+* Installa esattamente il file @V_CRON_FILE@ gia preparato dal reset.
+* Dopo aver installato la crontab, salva l'output con 'crontab -l > @V_OUT_CRON@'.
 ---
 [COMANDI GUIDATI & ALTERNATIVE]
 1. Snapshot processi:
-   top -b -n 1 > top_snapshot.txt
+   top -b -n 1 > @V_OUT_TOP@
 
 2. Memoria:
-   free -h > memory_report.txt
+   free -h > @V_OUT_MEM@
 
 3. Versione init (OpenRC):
-   openrc --version | head -n 1 > openrc_version.txt
+   openrc --version | head -n 1 > @V_OUT_VER@
 
 4. Log di sistema (messaggio del reset):
-   grep assisted-lab /var/log/messages > syslog_snapshot.txt
+   grep @V_LOG_TAG@ /var/log/messages > @V_OUT_SYS@
 
 5. Esecuzione con sudo:
-   sudo -u auditor whoami > sudo_user.txt
+   sudo -u @V_USER@ whoami > @V_OUT_SUDO@
 
-6. Crontab:
-   crontab nightly.cron
-   crontab -l > installed_cron.txt
+6. Crontab (con sudo: busybox crontab non e' suid):
+   sudo crontab @V_CRON_FILE@
+   sudo crontab -l > @V_OUT_CRON@
 ---
 [VERIFICA MANUALE AUTONOMA]
 Prima di lanciare 'lab check 08-system-admin':
-* head -n 1 top_snapshot.txt deve iniziare con top.
-* grep -E 'Mem|Memory' memory_report.txt deve trovare la riga memoria.
-* cat openrc_version.txt deve iniziare con openrc.
-* cat syslog_snapshot.txt deve contenere una riga con assisted-lab.
-* cat sudo_user.txt deve stampare auditor.
-* crontab -l deve contenere lab doctor e /tmp/lab-doctor.log.
-* cat installed_cron.txt deve mostrare la stessa riga di crontab -l.
+* head -n 1 @V_OUT_TOP@ deve iniziare con top.
+* grep -E 'Mem|Memory' @V_OUT_MEM@ deve trovare la riga memoria.
+* cat @V_OUT_VER@ deve iniziare con openrc.
+* cat @V_OUT_SYS@ deve contenere una riga con @V_LOG_TAG@.
+* cat @V_OUT_SUDO@ deve stampare @V_USER@.
+* sudo crontab -l deve contenere lab doctor e /tmp/lab-doctor.log.
+* cat @V_OUT_CRON@ deve mostrare la stessa riga di crontab -l.

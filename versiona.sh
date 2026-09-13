@@ -17,6 +17,9 @@
 #                                carica i tarball storici (0001-0005)
 #                                e crea i tag Docker corrispondenti
 #
+#   Argomenti non elencati (es. --help) → errore e uscita immediata:
+#   nessuna versione viene creata. Usare solo le invocazioni elencate.
+#
 #   Nota formato: ogni versione numerata e' salvata come UN SINGOLO archivio
 #   `ver NNNN - mese gg.tar.gz` (contenente sorgenti+docker+volume+manifest).
 #   `ver latest/` resta invece una cartella live (stato corrente non numerato).
@@ -31,6 +34,11 @@ for arg in "$@"; do
         --restore-tag-storiche) RESTORE_STORICHE=true ;;
         --overwrite)            OVERWRITE=true ;;
         --dry-run)              DRY_RUN=true ;;
+        *)
+            echo "Errore: argomento sconosciuto '$arg'." >&2
+            echo "Uso: ./versiona.sh [--overwrite|--dry-run|--restore-tag-storiche]" >&2
+            exit 1
+            ;;
     esac
 done
 

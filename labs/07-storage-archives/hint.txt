@@ -8,29 +8,29 @@
 * Lavora dal WORKDIR, cosi gli archivi contengono percorsi relativi puliti.
 * Per df usa il punto '.' come target: stai chiedendo il filesystem che contiene la directory corrente.
 * Per du usa '-s' quando vuoi un totale, '-a' quando vuoi vedere anche i singoli file.
-* Prima di estrarre, crea la directory restore.
+* Prima di estrarre, crea la directory @V_RESTORE@.
 ---
 [COMANDI GUIDATI & ALTERNATIVE]
 1. Report filesystem:
-   df -h . > filesystem_report.txt
+   df -h . > @V_OUT_FS@
 
 2. Dimensione totale dataset:
-   du -sh datasets > dataset_size.txt
+   du -sh @V_DS@ > @V_OUT_SIZE@
 
 3. File piu grande:
-   find datasets -type f -exec du -h {} + | sort -h | tail -n 1 > largest_item.txt
+   find @V_DS@ -type f -exec du -h {} + | sort -h | tail -n 1 > @V_OUT_ITEM@
 
 4. Archivio compresso:
-   tar -czf service-a.tar.gz datasets/service-a
+   tar -czf @V_ARC@ @V_DS@/@V_A@
 
 5. Estrazione:
-   mkdir -p restore
-   tar -xzf service-a.tar.gz -C restore
+   mkdir -p @V_RESTORE@
+   tar -xzf @V_ARC@ -C @V_RESTORE@
 ---
 [VERIFICA MANUALE AUTONOMA]
 Prima di lanciare 'lab check 07-storage-archives':
-* head -n 1 filesystem_report.txt deve mostrare l'header di df.
-* cat dataset_size.txt deve terminare con datasets.
-* cat largest_item.txt deve citare datasets/big/blob.bin.
-* tar -tzf service-a.tar.gz deve elencare datasets/service-a/config.yml.
-* test -f restore/datasets/service-a/config.yml && echo OK conferma l'estrazione.
+* head -n 1 @V_OUT_FS@ deve mostrare l'header di df.
+* cat @V_OUT_SIZE@ deve terminare con @V_DS@.
+* cat @V_OUT_ITEM@ deve citare @V_DS@/@V_BIG@/@V_BLOB@.
+* tar -tzf @V_ARC@ deve elencare @V_DS@/@V_A@/@V_CFG@.
+* test -f @V_RESTORE@/@V_DS@/@V_A@/@V_CFG@ && echo OK conferma l'estrazione.

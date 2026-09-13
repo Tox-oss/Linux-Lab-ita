@@ -1,54 +1,73 @@
 #!/usr/bin/env bash
 set -euo pipefail
 source "$(dirname "$0")/../../lib/common.sh"
-BASE=${LAB_TRAINING_ROOT:-/workspace/training}/diff-lab
+BASE=${LAB_TRAINING_ROOT:-/workspace/training}/${V_DIR:-diff-lab}
 
 printf 'check 10-file-comparison\n'
 
-for f in config.diff report_check.txt only_prod.txt release_diff.txt; do
+CFG_OLD=${V_CFG_OLD:-config.old.conf}
+CFG_NEW=${V_CFG_NEW:-config.new.conf}
+REP_A=${V_REP_A:-report_a.txt}
+REP_B=${V_REP_B:-report_b.txt}
+PROD=${V_PROD:-servers_prod.txt}
+STAG=${V_STAG:-servers_staging.txt}
+REL_A=${V_REL_A:-release_v1}
+REL_B=${V_REL_B:-release_v2}
+APP_CONF=${V_APP_CONF:-app.conf}
+DEPRECATED=${V_DEPRECATED:-deprecated.old}
+OUT_DIFF=${V_OUT_DIFF:-config.diff}
+OUT_CHECK=${V_OUT_CHECK:-report_check.txt}
+OUT_ONLY=${V_OUT_ONLY:-only_prod.txt}
+OUT_REL=${V_OUT_REL:-release_diff.txt}
+VERD=${V_VERD:-identici}
+
+for f in "$OUT_DIFF" "$OUT_CHECK" "$OUT_ONLY" "$OUT_REL"; do
   warn_misplaced "/workspace/$f" "$BASE/$f"
   warn_misplaced "${LAB_TRAINING_ROOT:-/workspace/training}/$f" "$BASE/$f"
 done
 
-if [ -s "$BASE/config.diff" ] \
-   && grep -qx -- '-port=8080' "$BASE/config.diff" \
-   && grep -qx -- '+port=8443' "$BASE/config.diff"; then
-  pass "config.diff cattura la modifica (port 8080 -> 8443)"
+old_port=$(grep '^port=' "$BASE/$CFG_OLD" 2>/dev/null | head -n 1 || true)
+new_port=$(grep '^port=' "$BASE/$CFG_NEW" 2>/dev/null | head -n 1 || true)
+if [ -s "$BASE/$OUT_DIFF" ] \
+   && [ -n "$old_port" ] && [ -n "$new_port" ] \
+   && grep -qx -- "-$old_port" "$BASE/$OUT_DIFF" \
+   && grep -qx -- "+$new_port" "$BASE/$OUT_DIFF"; then
+  pass "$OUT_DIFF cattura la modifica ($old_port -> $new_port)"
 else
-  miss "config.diff assente o non riflette la modifica" "punto 1: diff -u config.old.conf config.new.conf > config.diff" "cat config.diff"
+  miss "$OUT_DIFF assente o non riflette la modifica" "punto 1: diff -u $CFG_OLD $CFG_NEW > $OUT_DIFF" "cat $OUT_DIFF"
 fi
 
 rc=""
-if [ -f "$BASE/report_check.txt" ]; then
-  rc=$(tr -d '[:space:]' < "$BASE/report_check.txt" | tr '[:upper:]' '[:lower:]')
+if [ -f "$BASE/$OUT_CHECK" ]; then
+  rc=$(tr -d '[:space:]' < "$BASE/$OUT_CHECK" | tr '[:upper:]' '[:lower:]')
 fi
-if cmp -s "$BASE/report_a.txt" "$BASE/report_b.txt" && [ "$rc" = "identici" ]; then
-  pass "report_check.txt = identici (confermato con cmp)"
+if cmp -s "$BASE/$REP_A" "$BASE/$REP_B" && [ "$rc" = "identici" ]; then
+  pass "$OUT_CHECK = identici (confermato con cmp)"
 else
-  miss "report_check.txt errato o assente" "punto 2: cmp -s report_a.txt report_b.txt && echo identici > report_check.txt" "cmp report_a.txt report_b.txt"
+  miss "$OUT_CHECK errato o assente" "punto 2: cmp -s $REP_A $REP_B && echo identici > $OUT_CHECK" "cmp $REP_A $REP_B"
 fi
 
-expected_prod=$(printf 'host-a\nhost-d')
+expected_prod=$(comm -23 "$BASE/$PROD" "$BASE/$STAG" 2>/dev/null | tr -d '\r' | awk '{$1=$1; print}' | grep -v '^$' || echo "")
 got_prod=""
-if [ -f "$BASE/only_prod.txt" ]; then
-  got_prod=$(tr -d '\r' < "$BASE/only_prod.txt" | awk '{$1=$1; print}' | grep -v '^$' || echo "")
+if [ -f "$BASE/$OUT_ONLY" ]; then
+  got_prod=$(tr -d '\r' < "$BASE/$OUT_ONLY" | awk '{$1=$1; print}' | grep -v '^$' || echo "")
 fi
 if [ "$got_prod" = "$expected_prod" ]; then
-  pass "only_prod.txt = host-a, host-d (comm -23)"
+  pass "$OUT_ONLY = $(printf '%s' "$expected_prod" | tr '\n' ', ' | sed 's/,$//') (comm -23)"
 else
-  miss "only_prod.txt errato o assente" "punto 3: comm -23 servers_prod.txt servers_staging.txt > only_prod.txt" "comm -23 servers_prod.txt servers_staging.txt"
+  miss "$OUT_ONLY errato o assente" "punto 3: comm -23 $PROD $STAG > $OUT_ONLY" "comm -23 $PROD $STAG"
 fi
 
-if [ -s "$BASE/release_diff.txt" ] && grep -q 'app.conf' "$BASE/release_diff.txt"; then
-  pass "release_diff.txt individua app.conf come file cambiato"
+if [ -s "$BASE/$OUT_REL" ] && grep -q "$APP_CONF" "$BASE/$OUT_REL"; then
+  pass "$OUT_REL individua $APP_CONF come file cambiato"
 else
-  miss "release_diff.txt assente o non cita app.conf" "punto 4: diff -r release_v1 release_v2 > release_diff.txt" "cat release_diff.txt"
+  miss "$OUT_REL assente o non cita $APP_CONF" "punto 4: diff -r $REL_A $REL_B > $OUT_REL" "cat $OUT_REL"
 fi
 
-if [ ! -e "$BASE/deprecated.old" ]; then
-  pass "deprecated.old eliminato"
+if [ ! -e "$BASE/$DEPRECATED" ]; then
+  pass "$DEPRECATED eliminato"
 else
-  miss "deprecated.old ancora presente" "punto 5: rm deprecated.old" "ls deprecated.old"
+  miss "$DEPRECATED ancora presente" "punto 5: rm $DEPRECATED" "ls $DEPRECATED"
 fi
 
 [ "$fail" -eq 0 ]

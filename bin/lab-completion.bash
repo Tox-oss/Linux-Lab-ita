@@ -40,7 +40,7 @@ _lab_complete() {
 
   # secondo argomento di `lab mode`: le modalita (+ forme brevi)
   if [ "${COMP_WORDS[1]}" = "mode" ] && [ "$COMP_CWORD" -eq 2 ]; then
-    COMPREPLY=( $(compgen -W "standard arcade hardcade std -a -s -hc" -- "$cur") )
+    COMPREPLY=( $(compgen -W "standard arcade hardcade class std -a -s -hc" -- "$cur") )
     return
   fi
 }

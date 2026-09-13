@@ -25,6 +25,11 @@ lab start 01-filesystem
 > L'immagine `assisted-labs` monta il volume `Alpine_Latest` su `/workspace`:
 > i file che crei dentro `/workspace/training` restano tra una sessione e
 > l'altra. I lab ufficiali vivono nell'immagine (`/opt`), non sul volume.
+>
+> Al primo accesso scegli un nome (minuscole, numeri e `_`): crei il tuo
+> **profilo utente** e da quel momento non sei più root ma quell'utente. Se un
+> comando richiede i pieni poteri, precedilo con `sudo` (la password di prova
+> è il tuo nome + `pass`, te la comunica l'intro).
 
 ## Build locale
 
@@ -79,10 +84,10 @@ lab quit           chiudi la sessione
 
 Le consegne, gli hint e il messaggio di benvenuto scorrono con un effetto
 "battitura" lettera per lettera a **0.04 secondi per carattere** (narrativa e
-comandi). Se durante lo scorrimento premi **INVIO**, il messaggio viene
-mostrato completo all'istante — non devi aspettare la fine. Nei casi in cui
-il tempo conta (modalità arcade/hardcade: timer e vite in gioco) la stampa è
-sempre istantanea. La velocità è regolabile con le variabili `LAB_TYPE_NARR`
+comandi). Se durante lo scorrimento premi **INVIO** o **SPAZIO**, il messaggio
+viene mostrato completo all'istante — non devi aspettare la fine. Nei casi in
+cui il tempo conta (modalità arcade/hardcade: timer e vite in gioco) la stampa
+è sempre istantanea. La velocità è regolabile con le variabili `LAB_TYPE_NARR`
 e `LAB_TYPE_CMD` (vedi sotto).
 
 ### Evidenziazione dei comandi
@@ -92,22 +97,33 @@ private.txt`, `grep 'ERROR' access.log | wc -l`) vengono mostrati in **magenta
 bold** ad alto contrasto, così risaltano subito rispetto al testo descrittivo
 in chiaro. L'utente riconosce a colpo d'occhio cosa digitare nell'esercizio.
 
-### Lezione narrata: `lab class <id>`
+### Lezione narrata: `lab mode class` (tutti i lab) e `lab class <id>` (un lab)
 
-`lab class` apre una **lezione narrata interattiva** sugli argomenti del lab:
-il testo scorre con la battitura (velocità dedicata `LAB_TYPE_CLASS`, default
-**0.03** s/car). All'avvio compare una micro-guida: **INVIO** salta subito
-alla frase successiva. Dopo ogni argomento la lezione chiede
-**«Ci sono dubbi?»** e l'utente sceglie liberamente cosa approfondire:
+`lab mode class` presenta le lezioni di **tutti** i lab, esposte nell'ordine
+dei lab (01 → 10): si sceglie un lab e parte la narrazione dei suoi argomenti.
+`lab class <id>` è la scorciatoia per narrare un singolo lab.
+
+La lezione è **narrata interattiva**: il testo scorre con la battitura
+(velocità dedicata `LAB_TYPE_CLASS`, default **0.03** s/car). All'avvio
+compare una micro-guida: **INVIO** o **SPAZIO** saltano subito alla frase
+successiva. Dopo ogni argomento la lezione chiede **«Ci sono dubbi?»** e l'utente sceglie
+liberamente cosa approfondire:
 
 - `[0]` → continua con l'argomento successivo (la lezione non è imposta);
 - `[N]` → apre la **versione riassuntiva** dell'argomento scelto;
 - il menu va in colonna quando le opzioni superano le 76 colonne, così resta
   leggibile anche su terminale 80-col.
 
-Colori della lezione (regole colori del corso): titolo in **cyan** (1;36),
-domanda «Ci sono dubbi?» in **giallo** (1;33), argomento corrente del menu in
-**verde** (1;32), riassunto in **magenta** (1;35).
+Colori della lezione (regole colori del corso): la narrazione è un dialogo tra
+due personaggi — **Root** (etichetta «Root:» in giallo opaco 33, testo del
+dialogo nel colore normale del terminale) e il **giocatore atteso** (etichetta
+«Utente:» in blu 1;34). Le righe di struttura restano **senza etichetta**: la
+voce del terminale/root per heading della lezione, domanda «Ci sono dubbi?»,
+box e micro-guida è in giallo opaco (33); gli altri titoli/cornici della CLI in
+**cyan** (1;36), argomento corrente del menu in **verde** (1;32), riassunto in
+**magenta** (1;35). L'intro e il banner usano lo stesso giallo opaco (33) per
+definire Root come un personaggio che parla all'utente (output dei comandi in
+giallo brillante 1;33, battute attese dell'utente in blu).
 
 **Formato del file `labs/<id>/class.txt`**:
 
